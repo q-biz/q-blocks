@@ -1,2 +1,7 @@
-name = "hello-world-block"
-type = "theme"
+api_version = "2024-10"
+
+[[extensions]]
+uid = "07876aa5-ca84-0733-a1e6-38303a5d3a9a3d61c3dc"
+type = "theme_app_extension"
+name = "Hello World Block"
+handle = "hello-world-block"
