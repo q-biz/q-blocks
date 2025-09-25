@@ -682,65 +682,283 @@ function initializeModel{{ block.id | replace: '-', '_' }}() {
     }
     
     async _generateMesh(processedData) {
-      console.log('🏗️ Generating 3D mesh...');
+      console.log('🏗️ Generating realistic 3D object...');
       
-      const { image, depthMap } = processedData;
+      const { image, depthMap, originalImage } = processedData;
       
-      // Create high-resolution geometry
-      const meshResolution = 64;
-      const geometry = new THREE.PlaneGeometry(2, 2, meshResolution - 1, meshResolution - 1);
+      // Create a true 3D object instead of a flat plane
+      return this._createVolumetric3DObject(image, depthMap, originalImage);
+    }
+    
+    async _createVolumetric3DObject(frontTexture, depthMap, originalImage) {
+      console.log('🎯 Creating volumetric 3D object with proper depth...');
       
-      // Apply displacement from depth map
+      // Analyze the product shape to determine best 3D representation
+      const productType = await this._analyzeProductShape(originalImage);
+      console.log('🔍 Product analysis:', productType);
+      
+      let geometry, materials;
+      
+      switch (productType.shape) {
+        case 'cylindrical':
+          ({ geometry, materials } = this._createCylindricalObject(frontTexture, depthMap, productType));
+          break;
+        case 'rectangular':
+          ({ geometry, materials } = this._createBoxObject(frontTexture, depthMap, productType));
+          break;
+        default:
+          ({ geometry, materials } = this._createSmartVolumetricObject(frontTexture, depthMap, productType));
+      }
+      
+      const mesh = new THREE.Mesh(geometry, materials);
+      
+      console.log('✅ Volumetric 3D object created:', {
+        shape: productType.shape,
+        dimensions: productType.dimensions,
+        faces: Array.isArray(materials) ? materials.length : 1
+      });
+      
+      return mesh;
+    }
+    
+    async _analyzeProductShape(image) {
+      console.log('🔍 Analyzing product shape...');
+      
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = image.width;
+      canvas.height = image.height;
+      ctx.drawImage(image, 0, 0);
+      
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const { data, width, height } = imageData;
+      
+      // Find the bounding box of the non-transparent object
+      let minX = width, maxX = 0, minY = height, maxY = 0;
+      let objectPixels = 0;
+      
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          const idx = (y * width + x) * 4;
+          const alpha = data[idx + 3];
+          
+          if (alpha > 128) { // Non-transparent pixel
+            minX = Math.min(minX, x);
+            maxX = Math.max(maxX, x);
+            minY = Math.min(minY, y);
+            maxY = Math.max(maxY, y);
+            objectPixels++;
+          }
+        }
+      }
+      
+      const objectWidth = maxX - minX;
+      const objectHeight = maxY - minY;
+      const aspectRatio = objectWidth / objectHeight;
+      const fillRatio = objectPixels / (objectWidth * objectHeight);
+      
+      // Determine shape based on analysis
+      let shape;
+      if (aspectRatio > 1.3) {
+        shape = 'rectangular'; // Wide objects
+      } else if (aspectRatio < 0.7) {
+        shape = 'rectangular'; // Tall objects
+      } else if (fillRatio > 0.7) {
+        shape = 'cylindrical'; // Round/filled objects
+      } else {
+        shape = 'complex'; // Complex shapes
+      }
+      
+      return {
+        shape: shape,
+        aspectRatio: aspectRatio,
+        fillRatio: fillRatio,
+        dimensions: {
+          width: objectWidth,
+          height: objectHeight,
+          centerX: (minX + maxX) / 2,
+          centerY: (minY + maxY) / 2
+        }
+      };
+    }
+    
+    _createCylindricalObject(frontTexture, depthMap, productType) {
+      console.log('🛢️ Creating cylindrical object...');
+      
+      // Create cylinder with front texture and generated back
+      const radius = 0.5;
+      const height = productType.aspectRatio > 1 ? 1 : 1.5;
+      const geometry = new THREE.CylinderGeometry(radius, radius, height, 32, 8);
+      
+      // Create materials for different parts
+      const frontMaterial = new THREE.MeshPhongMaterial({
+        map: new THREE.TextureLoader().load(frontTexture),
+        transparent: true,
+        shininess: 30
+      });
+      
+      // Generate back texture (darker version of front)
+      const backTexture = this._generateBackTexture(frontTexture);
+      const backMaterial = new THREE.MeshPhongMaterial({
+        map: backTexture,
+        transparent: true,
+        shininess: 30
+      });
+      
+      const sideMaterial = new THREE.MeshPhongMaterial({
+        color: 0x888888,
+        shininess: 20
+      });
+      
+      // Apply different materials to different faces
+      const materials = [sideMaterial, frontMaterial, backMaterial];
+      
+      return { geometry, materials };
+    }
+    
+    _createBoxObject(frontTexture, depthMap, productType) {
+      console.log('📦 Creating box object...');
+      
+      const width = Math.max(1, productType.aspectRatio);
+      const height = Math.max(1, 1 / productType.aspectRatio);
+      const depth = 0.3; // Moderate depth
+      
+      const geometry = new THREE.BoxGeometry(width, height, depth);
+      
+      const frontMaterial = new THREE.MeshPhongMaterial({
+        map: new THREE.TextureLoader().load(frontTexture),
+        transparent: true,
+        shininess: 30
+      });
+      
+      const backTexture = this._generateBackTexture(frontTexture);
+      const backMaterial = new THREE.MeshPhongMaterial({
+        map: backTexture,
+        transparent: true,
+        shininess: 30
+      });
+      
+      const sideMaterial = new THREE.MeshPhongMaterial({
+        color: 0x666666,
+        shininess: 20
+      });
+      
+      // Box faces: right, left, top, bottom, front, back
+      const materials = [
+        sideMaterial,    // right
+        sideMaterial,    // left  
+        sideMaterial,    // top
+        sideMaterial,    // bottom
+        frontMaterial,   // front
+        backMaterial     // back
+      ];
+      
+      return { geometry, materials };
+    }
+    
+    _createSmartVolumetricObject(frontTexture, depthMap, productType) {
+      console.log('🎯 Creating smart volumetric object...');
+      
+      // Create a sophisticated displacement-mapped surface with proper back
+      const resolution = 32; // Moderate resolution to avoid spikes
+      const geometry = new THREE.PlaneGeometry(2, 2, resolution - 1, resolution - 1);
+      
+      // Apply smooth displacement from depth map
       const vertices = geometry.attributes.position.array;
-      const depthData = depthMap.data || depthMap;
-      const depthWidth = depthMap.width || meshResolution;
-      const depthHeight = depthMap.height || meshResolution;
+      const depthData = depthMap.data;
+      const depthWidth = depthMap.width;
+      const depthHeight = depthMap.height;
       
-      let displacementCount = 0;
       let maxDisplacement = 0;
       
       for (let i = 0; i < vertices.length; i += 3) {
-        const x = (vertices[i] + 1) * 0.5; // Convert from -1,1 to 0,1
+        const x = (vertices[i] + 1) * 0.5;
         const y = (vertices[i + 1] + 1) * 0.5;
         
-        // Sample depth value
         const depthX = Math.floor(x * depthWidth);
         const depthY = Math.floor(y * depthHeight);
         const depthIndex = depthY * depthWidth + depthX;
         
-        // Apply depth displacement
-        const depth = (depthData[depthIndex] || 0.5) - 0.5;
-        const displacement = depth * 0.3;
+        // Apply smooth, subtle displacement
+        const depth = depthData[depthIndex] || 0.5;
+        const displacement = (depth - 0.5) * 0.1; // Much smaller displacement
         vertices[i + 2] = displacement;
         
-        if (displacement !== 0) displacementCount++;
         maxDisplacement = Math.max(maxDisplacement, Math.abs(displacement));
       }
       
       geometry.attributes.position.needsUpdate = true;
       geometry.computeVertexNormals();
       
-      console.log('📊 Mesh generation stats:', {
-        vertices: vertices.length / 3,
-        displacedVertices: displacementCount,
-        maxDisplacement: maxDisplacement.toFixed(3),
-        resolution: `${meshResolution}x${meshResolution}`
-      });
+      // Create a group with front and back faces
+      const group = new THREE.Group();
       
-      // Create material
-      const texture = new THREE.TextureLoader().load(image);
-      const material = new THREE.MeshPhongMaterial({
-        map: texture,
+      // Front face
+      const frontMaterial = new THREE.MeshPhongMaterial({
+        map: new THREE.TextureLoader().load(frontTexture),
         transparent: true,
-        side: THREE.DoubleSide,
-        shininess: 30,
-        specular: 0x111111
+        side: THREE.FrontSide,
+        shininess: 30
+      });
+      const frontMesh = new THREE.Mesh(geometry.clone(), frontMaterial);
+      group.add(frontMesh);
+      
+      // Back face (flipped and offset)
+      const backGeometry = geometry.clone();
+      const backVertices = backGeometry.attributes.position.array;
+      for (let i = 0; i < backVertices.length; i += 3) {
+        backVertices[i + 2] = -backVertices[i + 2] - 0.05; // Offset back
+      }
+      backGeometry.attributes.position.needsUpdate = true;
+      backGeometry.computeVertexNormals();
+      
+      const backTexture = this._generateBackTexture(frontTexture);
+      const backMaterial = new THREE.MeshPhongMaterial({
+        map: backTexture,
+        transparent: true,
+        side: THREE.BackSide,
+        shininess: 30
+      });
+      const backMesh = new THREE.Mesh(backGeometry, backMaterial);
+      backMesh.rotation.y = Math.PI; // Flip 180 degrees
+      group.add(backMesh);
+      
+      console.log('📊 Smart mesh stats:', {
+        resolution: `${resolution}x${resolution}`,
+        maxDisplacement: maxDisplacement.toFixed(3),
+        faces: 'front + back'
       });
       
-      const mesh = new THREE.Mesh(geometry, material);
-      console.log('✅ 3D mesh created successfully');
+      return { geometry: group, materials: frontMaterial };
+    }
+    
+    _generateBackTexture(frontTextureUrl) {
+      console.log('🔄 Generating back texture...');
       
-      return mesh;
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      
+      img.crossOrigin = 'anonymous';
+      
+      return new Promise((resolve) => {
+        img.onload = () => {
+          canvas.width = img.width;
+          canvas.height = img.height;
+          
+          // Create a darker, mirrored version for the back
+          ctx.filter = 'brightness(0.7) contrast(0.9) hue-rotate(5deg)';
+          ctx.scale(-1, 1);
+          ctx.translate(-canvas.width, 0);
+          ctx.drawImage(img, 0, 0);
+          
+          const texture = new THREE.Texture(canvas);
+          texture.needsUpdate = true;
+          resolve(texture);
+        };
+        
+        img.src = frontTextureUrl;
+      });
     }
     
     _configureScene(mesh) {
