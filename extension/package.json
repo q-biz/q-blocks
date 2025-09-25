@@ -1,0 +1,9 @@
+{
+  "name": "shopify-extensions",
+  "version": "1.0.0",
+  "description": "Shopify extensions for Q-Blocks app",
+  "scripts": {
+    "generate": "shopify app generate extension"
+  },
+  "type": "module"
+}

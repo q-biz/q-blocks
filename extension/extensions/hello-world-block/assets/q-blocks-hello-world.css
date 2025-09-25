@@ -1,0 +1,46 @@
+/* Q-Blocks Hello World App Block Styles */
+
+.q-blocks-hello-world {
+  padding: 20px;
+  border: 2px solid #e1e1e1;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  margin: 10px 0;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.3s ease;
+}
+
+.q-blocks-hello-world:hover {
+  border-color: #007ace;
+}
+
+.q-blocks-hello-world h2 {
+  margin: 0;
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 600;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .q-blocks-hello-world {
+    padding: 15px;
+    margin: 8px 0;
+  }
+  
+  .q-blocks-hello-world h2 {
+    font-size: 18px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .q-blocks-hello-world {
+    padding: 12px;
+    margin: 5px 0;
+  }
+  
+  .q-blocks-hello-world h2 {
+    font-size: 16px !important;
+  }
+}
