@@ -145,26 +145,14 @@
     {% if block.settings.product != blank %}
       {% assign product = all_products[block.settings.product] %}
       
-      {% if block.settings.model_url != blank %}
-        <!-- 3D Model Container -->
+      {% if product.featured_image and block.settings.enable_3d %}
+        <!-- 3D Image Container -->
         <div id="model-container-{{ block.id }}" class="model-container">
           <canvas id="model-canvas-{{ block.id }}" class="model-canvas"></canvas>
           <div id="loading-{{ block.id }}" class="loading-indicator">
             <div class="spinner"></div>
-            <span>Loading 3D Model...</span>
+            <span>Loading 3D View...</span>
           </div>
-          <!-- Fallback image (hidden by default, shown if model fails) -->
-          {% if product.featured_image %}
-            <img 
-              id="fallback-image-{{ block.id }}"
-              src="{{ product.featured_image | image_url: width: 600 }}" 
-              alt="{{ product.featured_image.alt | default: product.title }}"
-              class="product-image fallback-image"
-              width="600"
-              height="400"
-              style="display: none;"
-            />
-          {% endif %}
         </div>
       {% elsif product.featured_image %}
         <img 
@@ -204,7 +192,6 @@
 
 <!-- Three.js CDN -->
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 
 <script>
 // Global error handler for 3D debugging
@@ -232,9 +219,8 @@ console.log('🌐 Browser Info:', {
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   console.log('🚀 DOM Content Loaded - Product Showcase Block {{ block.id }}');
-  console.log('📝 Model URL setting:', '{{ block.settings.model_url }}');
   console.log('📦 Block settings:', {
-    model_url: '{{ block.settings.model_url }}',
+    enable_3d: {{ block.settings.enable_3d | default: false }},
     rotation_speed: {{ block.settings.rotation_speed | default: 1 }},
     model_scale: {{ block.settings.model_scale | default: 1.5 }},
     camera_distance: {{ block.settings.camera_distance | default: 3 }},
@@ -242,28 +228,36 @@ document.addEventListener('DOMContentLoaded', function() {
     enable_bobbing: {{ block.settings.enable_bobbing | default: false }}
   });
   
-  {% if block.settings.model_url != blank %}
-    console.log('✅ Model URL is set, initializing 3D model...');
-    initializeModel{{ block.id | replace: '-', '_' }}();
+  {% if block.settings.enable_3d %}
+    {% if block.settings.product != blank %}
+      {% assign product = all_products[block.settings.product] %}
+      {% if product.featured_image %}
+        console.log('✅ 3D enabled with product image, initializing 3D view...');
+        console.log('🖼️ Image URL:', '{{ product.featured_image | image_url: width: 600 }}');
+        initializeModel{{ block.id | replace: '-', '_' }}();
+      {% else %}
+        console.log('❌ No product image available for 3D view');
+      {% endif %}
+    {% else %}
+      console.log('❌ No product selected for 3D view');
+    {% endif %}
   {% else %}
-    console.log('❌ No model URL set, skipping 3D initialization');
+    console.log('❌ 3D view disabled, showing regular image');
   {% endif %}
 });
 
-{% if block.settings.model_url != blank %}
+{% if block.settings.enable_3d %}
 function initializeModel{{ block.id | replace: '-', '_' }}() {
-  console.log('🎯 Starting model initialization for block {{ block.id }}');
+  console.log('🎯 Starting 3D image initialization for block {{ block.id }}');
   
   const container = document.getElementById('model-container-{{ block.id }}');
   const canvas = document.getElementById('model-canvas-{{ block.id }}');
   const loading = document.getElementById('loading-{{ block.id }}');
-  const fallbackImage = document.getElementById('fallback-image-{{ block.id }}');
   
   console.log('🔍 DOM Elements found:', {
     container: !!container,
     canvas: !!canvas,
-    loading: !!loading,
-    fallbackImage: !!fallbackImage
+    loading: !!loading
   });
   
   if (!container || !canvas) {
@@ -286,16 +280,11 @@ function initializeModel{{ block.id | replace: '-', '_' }}() {
   }
   console.log('✅ THREE.js loaded:', THREE.REVISION);
   
-  // Check if GLTFLoader is available
-  if (typeof THREE.GLTFLoader === 'undefined') {
-    console.error('❌ GLTFLoader not available!');
-    return;
-  }
-  console.log('✅ GLTFLoader available');
-  
   // Scene setup
   console.log('🎬 Creating Three.js scene...');
   const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0xf5f7fa);
+  
   const camera = new THREE.PerspectiveCamera(75, container.offsetWidth / container.offsetHeight, 0.1, 1000);
   
   console.log('🖥️ Setting up WebGL renderer...');
@@ -306,10 +295,8 @@ function initializeModel{{ block.id | replace: '-', '_' }}() {
   });
   
   renderer.setSize(container.offsetWidth, container.offsetHeight);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Optimize for performance
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.outputEncoding = THREE.sRGBEncoding;
-  renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   
   console.log('✅ Renderer setup complete:', {
     size: [container.offsetWidth, container.offsetHeight],
@@ -318,112 +305,88 @@ function initializeModel{{ block.id | replace: '-', '_' }}() {
   
   // Lighting setup
   console.log('💡 Setting up lighting...');
-  const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
   scene.add(ambientLight);
   
-  const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-  directionalLight.position.set(10, 10, 5);
-  directionalLight.castShadow = true;
-  directionalLight.shadow.mapSize.width = 1024;
-  directionalLight.shadow.mapSize.height = 1024;
+  const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+  directionalLight.position.set(5, 5, 5);
   scene.add(directionalLight);
-  
-  const fillLight = new THREE.DirectionalLight(0xffffff, 0.3);
-  fillLight.position.set(-10, 0, -5);
-  scene.add(fillLight);
   console.log('✅ Lighting setup complete');
   
-  // Model variables
-  let model = null;
-  let mixer = null;
-  let clock = new THREE.Clock();
+  // Create 3D plane with product image
+  console.log('🖼️ Creating 3D plane with product image...');
+  const imageUrl = '{{ product.featured_image | image_url: width: 600 }}';
   
-  // Load model
-  console.log('📦 Starting model load from URL:', '{{ block.settings.model_url }}');
-  const loader = new THREE.GLTFLoader();
-  loader.load(
-    '{{ block.settings.model_url }}',
-    function(gltf) {
-      console.log('✅ Model loaded successfully!', gltf);
-      model = gltf.scene;
+  // Load texture
+  const textureLoader = new THREE.TextureLoader();
+  textureLoader.crossOrigin = 'anonymous';
+  
+  textureLoader.load(
+    imageUrl,
+    function(texture) {
+      console.log('✅ Image texture loaded successfully!');
       
-      // Auto-scale and center model
-      console.log('📐 Processing model geometry...');
-      const box = new THREE.Box3().setFromObject(model);
-      const size = box.getSize(new THREE.Vector3()).length();
-      const center = box.getCenter(new THREE.Vector3());
-      
-      console.log('📏 Model dimensions:', {
-        size: size,
-        center: center,
-        boundingBox: box
-      });
-      
-      model.position.x += (model.position.x - center.x);
-      model.position.y += (model.position.y - center.y);
-      model.position.z += (model.position.z - center.z);
-      
-      const scale = {{ block.settings.model_scale | default: 1.5 }} / size;
-      model.scale.setScalar(scale);
-      
-      console.log('🔧 Applied transformations:', {
-        position: model.position,
-        scale: scale,
-        finalScale: model.scale
-      });
-      
-      // Enable shadows
-      let meshCount = 0;
-      model.traverse(function(child) {
-        if (child.isMesh) {
-          child.castShadow = true;
-          child.receiveShadow = true;
-          meshCount++;
+      // Create geometry based on image aspect ratio
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = function() {
+        const aspectRatio = img.width / img.height;
+        const planeWidth = aspectRatio > 1 ? 2 : 2 * aspectRatio;
+        const planeHeight = aspectRatio > 1 ? 2 / aspectRatio : 2;
+        
+        console.log('📐 Image dimensions:', {
+          width: img.width,
+          height: img.height,
+          aspectRatio: aspectRatio,
+          planeSize: [planeWidth, planeHeight]
+        });
+        
+        // Create plane geometry
+        const geometry = new THREE.PlaneGeometry(planeWidth, planeHeight);
+        
+        // Create material with the image texture
+        const material = new THREE.MeshLambertMaterial({
+          map: texture,
+          transparent: true,
+          side: THREE.DoubleSide
+        });
+        
+        // Create 3D object
+        window['model_{{ block.id | replace: "-", "_" }}'] = new THREE.Mesh(geometry, material);
+        const model = window['model_{{ block.id | replace: "-", "_" }}'];
+        
+        // Apply scale
+        const scale = {{ block.settings.model_scale | default: 1.5 }};
+        model.scale.setScalar(scale);
+        
+        scene.add(model);
+        
+        // Position camera
+        camera.position.z = {{ block.settings.camera_distance | default: 3 }};
+        camera.position.y = {{ block.settings.camera_height | default: 0 }};
+        
+        console.log('📷 Camera positioned at:', {
+          position: camera.position,
+          aspect: camera.aspect
+        });
+        
+        // Hide loading indicator
+        if (loading) {
+          loading.style.display = 'none';
+          console.log('✅ Loading indicator hidden');
         }
-      });
-      
-      console.log('🖼️ Found', meshCount, 'meshes in model');
-      
-      scene.add(model);
-      
-      // Set camera position
-      camera.position.z = {{ block.settings.camera_distance | default: 3 }};
-      camera.position.y = {{ block.settings.camera_height | default: 0 }};
-      
-      console.log('📷 Camera positioned at:', {
-        position: camera.position,
-        aspect: camera.aspect
-      });
-      
-      // Hide loading indicator
-      if (loading) {
-        loading.style.display = 'none';
-        console.log('✅ Loading indicator hidden');
-      }
-      
-      // Start animation loop
-      console.log('🎬 Starting animation loop...');
-      animate();
+        
+        // Start animation loop
+        console.log('🎬 Starting animation loop...');
+        animate();
+      };
+      img.src = imageUrl;
     },
     function(progress) {
       console.log('📊 Loading progress:', Math.round((progress.loaded / progress.total) * 100) + '%');
     },
     function(error) {
-      console.error('❌ Error loading 3D model:', error);
-      console.error('🔍 Error details:', {
-        message: error.message,
-        type: error.type,
-        target: error.target
-      });
-      
-      // Show fallback image
-      if (fallbackImage) {
-        fallbackImage.style.display = 'block';
-        console.log('🖼️ Showing fallback image');
-      } else {
-        console.log('❌ No fallback image available');
-      }
-      
+      console.error('❌ Error loading image texture:', error);
       if (loading) {
         loading.style.display = 'none';
         console.log('🔄 Loading indicator hidden after error');
@@ -433,6 +396,8 @@ function initializeModel{{ block.id | replace: '-', '_' }}() {
   
   // Animation loop
   let animationStarted = false;
+  let clock = new THREE.Clock();
+  
   function animate() {
     if (!animationStarted) {
       console.log('🎬 Animation loop started successfully!');
@@ -441,6 +406,7 @@ function initializeModel{{ block.id | replace: '-', '_' }}() {
     
     requestAnimationFrame(animate);
     
+    const model = window['model_{{ block.id | replace: "-", "_" }}'];
     if (model) {
       // Continuous rotation
       const rotationSpeed = {{ block.settings.rotation_speed | default: 1 }} * 0.01;
@@ -450,10 +416,6 @@ function initializeModel{{ block.id | replace: '-', '_' }}() {
       {% if block.settings.enable_bobbing %}
         model.position.y += Math.sin(clock.getElapsedTime() * 2) * 0.01;
       {% endif %}
-    }
-    
-    if (mixer) {
-      mixer.update(clock.getDelta());
     }
     
     try {
@@ -523,13 +485,14 @@ function initializeModel{{ block.id | replace: '-', '_' }}() {
     },
     {
       "type": "header",
-      "content": "3D Model Settings"
+      "content": "3D Display Settings"
     },
     {
-      "type": "url",
-      "id": "model_url",
-      "label": "3D Model URL (.glb or .gltf)",
-      "info": "Upload your 3D model file and paste the URL here. Supports .glb and .gltf formats."
+      "type": "checkbox",
+      "id": "enable_3d",
+      "label": "Enable 3D Spinning View",
+      "default": false,
+      "info": "Convert the product image into a spinning 3D display"
     },
     {
       "type": "range",
