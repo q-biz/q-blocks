@@ -22,7 +22,7 @@ const HomePage = () => {
 
   return (
     <>
-      <Page title="Home">
+      <Page title="Q-Blocks App - Home">
         <Layout>
           {isDev ? (
             <Layout.Section variant="fullWidth">
