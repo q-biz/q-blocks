@@ -190,10 +190,13 @@
   </div>
 </div>
 
-<!-- Three.js CDN and Advanced Libraries -->
+<!-- Three.js CDN and Advanced AI Libraries -->
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.20.0/dist/tf.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.15.0/dist/tf.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl@4.15.0/dist/tf-backend-webgl.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation@0.1.1675465747/selfie_segmentation.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/@tensorflow-models/depth-estimation@0.0.6/dist/depth-estimation.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/ml-matrix@6.10.4/lib-es6/index.js"></script>
 
 <script>
 // Global error handler for 3D debugging
@@ -332,7 +335,9 @@ function initializeModel{{ block.id | replace: '-', '_' }}() {
       this.dependencies = {
         threejs: false,
         tensorflow: false,
-        depthEstimation: false
+        depthEstimation: false,
+        mediaPipe: false,
+        mlMatrix: false
       };
       
       console.log('🏗️ Product3DSystem initialized for block:', this.blockId);
@@ -427,6 +432,22 @@ function initializeModel{{ block.id | replace: '-', '_' }}() {
         console.log('✅ DepthEstimation available');
       } catch (error) {
         console.warn('⚠️ DepthEstimation not available:', error.message);
+      }
+      
+      // Check MediaPipe
+      if (typeof SelfieSegmentation !== 'undefined') {
+        this.dependencies.mediaPipe = true;
+        console.log('✅ MediaPipe available');
+      } else {
+        console.warn('⚠️ MediaPipe not available');
+      }
+      
+      // Check ML-Matrix
+      if (typeof MLMatrix !== 'undefined' || typeof window.MLMatrix !== 'undefined') {
+        this.dependencies.mlMatrix = true;
+        console.log('✅ ML-Matrix available');
+      } else {
+        console.warn('⚠️ ML-Matrix not available');
       }
       
       console.log('📊 Dependency status:', this.dependencies);
@@ -551,38 +572,193 @@ function initializeModel{{ block.id | replace: '-', '_' }}() {
     }
     
     async _generateDepthMap(imageDataUrl) {
-      console.log('🧠 Generating depth map...');
+      console.log('🧠 Generating advanced AI depth map...');
       
+      // Try multiple AI approaches in order of sophistication
       if (this.dependencies.tensorflow && this.dependencies.depthEstimation) {
         try {
-          console.log('🤖 Using AI depth estimation...');
-          const model = await depthEstimation.createEstimator(
-            depthEstimation.SupportedModels.ARPortraitDepth
-          );
-          
-          const img = await this._createImageFromDataUrl(imageDataUrl);
-          const depthMap = await model.estimateDepth(img);
-          
-          console.log('✅ AI depth estimation complete:', {
-            width: depthMap.width,
-            height: depthMap.height,
-            dataType: typeof depthMap.data
-          });
-          
-          return depthMap;
-          
+          console.log('🤖 Attempting MiDaS depth estimation...');
+          const depthMap = await this._generateMiDaSDepth(imageDataUrl);
+          if (depthMap) return depthMap;
         } catch (error) {
-          console.warn('⚠️ AI depth estimation failed:', error.message);
-          console.log('🔄 Falling back to procedural depth...');
+          console.warn('⚠️ MiDaS failed:', error.message);
         }
       }
       
-      // Procedural depth generation
-      return this._generateProceduralDepth(imageDataUrl);
+      if (this.dependencies.mediaPipe) {
+        try {
+          console.log('🎯 Attempting MediaPipe segmentation-based depth...');
+          const depthMap = await this._generateSegmentationDepth(imageDataUrl);
+          if (depthMap) return depthMap;
+        } catch (error) {
+          console.warn('⚠️ MediaPipe failed:', error.message);
+        }
+      }
+      
+      if (this.dependencies.tensorflow) {
+        try {
+          console.log('🔬 Attempting TensorFlow edge-based depth...');
+          const depthMap = await this._generateEdgeBasedDepth(imageDataUrl);
+          if (depthMap) return depthMap;
+        } catch (error) {
+          console.warn('⚠️ TensorFlow edge detection failed:', error.message);
+        }
+      }
+      
+      // Enhanced procedural depth as final fallback
+      console.log('🔧 Using enhanced procedural depth...');
+      return this._generateEnhancedProceduralDepth(imageDataUrl);
     }
     
-    async _generateProceduralDepth(imageDataUrl) {
-      console.log('🔧 Generating procedural depth map...');
+    async _generateMiDaSDepth(imageDataUrl) {
+      console.log('🎯 MiDaS depth estimation...');
+      
+      try {
+        const model = await depthEstimation.createEstimator(
+          depthEstimation.SupportedModels.MiDaS
+        );
+        
+        const img = await this._createImageFromDataUrl(imageDataUrl);
+        const depthMap = await model.estimateDepth(img);
+        
+        console.log('✅ MiDaS depth complete:', {
+          width: depthMap.width,
+          height: depthMap.height,
+          range: [Math.min(...depthMap.data), Math.max(...depthMap.data)]
+        });
+        
+        return this._normalizeDepthMap(depthMap);
+        
+      } catch (error) {
+        console.warn('⚠️ MiDaS not available, trying alternative...');
+        throw error;
+      }
+    }
+    
+    async _generateSegmentationDepth(imageDataUrl) {
+      console.log('🎯 MediaPipe segmentation depth...');
+      
+      const img = await this._createImageFromDataUrl(imageDataUrl);
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx.drawImage(img, 0, 0);
+      
+      // Use segmentation to create depth layers
+      const segmentation = new SelfieSegmentation({
+        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`
+      });
+      
+      return new Promise((resolve, reject) => {
+        segmentation.setOptions({
+          modelSelection: 1, // General model
+          selfieMode: false
+        });
+        
+        segmentation.onResults((results) => {
+          if (results.segmentationMask) {
+            const depthMap = this._convertSegmentationToDepth(results.segmentationMask, img);
+            console.log('✅ MediaPipe segmentation depth complete');
+            resolve(depthMap);
+          } else {
+            reject(new Error('No segmentation mask generated'));
+          }
+        });
+        
+        segmentation.send({image: img});
+      });
+    }
+    
+    async _generateEdgeBasedDepth(imageDataUrl) {
+      console.log('🔬 TensorFlow edge-based depth...');
+      
+      const img = await this._createImageFromDataUrl(imageDataUrl);
+      const tensor = tf.browser.fromPixels(img);
+      
+      // Sobel edge detection
+      const grayscale = tensor.mean(2);
+      const sobelX = tf.conv2d(
+        grayscale.expandDims(0).expandDims(-1),
+        tf.tensor4d([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]], [3, 3, 1, 1]),
+        1, 'same'
+      );
+      const sobelY = tf.conv2d(
+        grayscale.expandDims(0).expandDims(-1),
+        tf.tensor4d([[-1, -2, -1], [0, 0, 0], [1, 2, 1]], [3, 3, 1, 1]),
+        1, 'same'
+      );
+      
+      // Combine edges for depth estimation
+      const magnitude = tf.sqrt(tf.add(tf.square(sobelX), tf.square(sobelY)));
+      const depthTensor = tf.sub(1, tf.div(magnitude, tf.max(magnitude)));
+      
+      const depthData = await depthTensor.squeeze().data();
+      
+      // Cleanup tensors
+      tensor.dispose();
+      grayscale.dispose();
+      sobelX.dispose();
+      sobelY.dispose();
+      magnitude.dispose();
+      depthTensor.dispose();
+      
+      console.log('✅ TensorFlow edge-based depth complete');
+      
+      return {
+        data: depthData,
+        width: img.width,
+        height: img.height
+      };
+    }
+    
+    _convertSegmentationToDepth(segmentationMask, originalImage) {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = originalImage.width;
+      canvas.height = originalImage.height;
+      
+      ctx.putImageData(segmentationMask, 0, 0);
+      const maskData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      
+      // Convert segmentation to depth
+      const depthData = new Float32Array(canvas.width * canvas.height);
+      
+      for (let i = 0; i < maskData.data.length; i += 4) {
+        const pixelIndex = i / 4;
+        const confidence = maskData.data[i] / 255; // Use red channel as confidence
+        
+        // Create depth based on segmentation confidence
+        depthData[pixelIndex] = confidence > 0.5 ? 0.8 : 0.2;
+      }
+      
+      return {
+        data: depthData,
+        width: canvas.width,
+        height: canvas.height
+      };
+    }
+    
+    _normalizeDepthMap(depthMap) {
+      const data = depthMap.data;
+      const min = Math.min(...data);
+      const max = Math.max(...data);
+      const range = max - min;
+      
+      const normalizedData = new Float32Array(data.length);
+      for (let i = 0; i < data.length; i++) {
+        normalizedData[i] = (data[i] - min) / range;
+      }
+      
+      return {
+        data: normalizedData,
+        width: depthMap.width,
+        height: depthMap.height
+      };
+    }
+    
+    async _generateEnhancedProceduralDepth(imageDataUrl) {
+      console.log('🔧 Generating enhanced procedural depth map...');
       
       const img = await this._createImageFromDataUrl(imageDataUrl);
       
@@ -826,22 +1002,124 @@ function initializeModel{{ block.id | replace: '-', '_' }}() {
     }
     
     _createSmartVolumetricObject(frontTexture, depthMap, productType) {
-      console.log('🎯 Creating smart volumetric object...');
+      console.log('🎯 Creating AI-enhanced volumetric object...');
       
-      // Create a simple plane for now to avoid group/material issues
-      const geometry = new THREE.PlaneGeometry(2, 2);
+      // Create high-resolution displaced geometry using AI depth data
+      const resolution = 64; // High resolution for quality
+      const geometry = new THREE.PlaneGeometry(2, 2, resolution - 1, resolution - 1);
       
-      // Create a single reliable material
+      // Apply AI-generated displacement
+      this._applyAdvancedDisplacement(geometry, depthMap);
+      
+      // Create enhanced material with proper shading
       const material = new THREE.MeshPhongMaterial({
         map: new THREE.TextureLoader().load(frontTexture),
         transparent: true,
         side: THREE.DoubleSide,
-        shininess: 30
+        shininess: 50,
+        specular: 0x222222,
+        bumpMap: this._createBumpMap(depthMap),
+        bumpScale: 0.05
       });
       
-      console.log('✅ Smart volumetric material created');
+      console.log('✅ AI-enhanced volumetric object created');
       
       return { geometry, materials: material };
+    }
+    
+    _applyAdvancedDisplacement(geometry, depthMap) {
+      console.log('🎨 Applying AI displacement mapping...');
+      
+      const vertices = geometry.attributes.position.array;
+      const depthData = depthMap.data;
+      const depthWidth = depthMap.width;
+      const depthHeight = depthMap.height;
+      
+      let minDisplacement = Infinity;
+      let maxDisplacement = -Infinity;
+      let displacedVertices = 0;
+      
+      for (let i = 0; i < vertices.length; i += 3) {
+        const x = (vertices[i] + 1) * 0.5; // Convert from -1,1 to 0,1
+        const y = (vertices[i + 1] + 1) * 0.5;
+        
+        // Sample depth value with bilinear interpolation for smoothness
+        const depth = this._sampleDepthBilinear(depthData, x, y, depthWidth, depthHeight);
+        
+        // Apply sophisticated displacement
+        const displacement = (depth - 0.5) * 0.2; // Moderate displacement
+        vertices[i + 2] = displacement;
+        
+        minDisplacement = Math.min(minDisplacement, displacement);
+        maxDisplacement = Math.max(maxDisplacement, displacement);
+        if (displacement !== 0) displacedVertices++;
+      }
+      
+      geometry.attributes.position.needsUpdate = true;
+      geometry.computeVertexNormals();
+      
+      console.log('📊 Advanced displacement stats:', {
+        vertices: vertices.length / 3,
+        displacedVertices: displacedVertices,
+        minDisplacement: minDisplacement.toFixed(3),
+        maxDisplacement: maxDisplacement.toFixed(3),
+        range: (maxDisplacement - minDisplacement).toFixed(3)
+      });
+    }
+    
+    _sampleDepthBilinear(depthData, x, y, width, height) {
+      // Bilinear interpolation for smooth sampling
+      const fx = x * (width - 1);
+      const fy = y * (height - 1);
+      
+      const x0 = Math.floor(fx);
+      const x1 = Math.min(x0 + 1, width - 1);
+      const y0 = Math.floor(fy);
+      const y1 = Math.min(y0 + 1, height - 1);
+      
+      const wx = fx - x0;
+      const wy = fy - y0;
+      
+      const d00 = depthData[y0 * width + x0] || 0.5;
+      const d10 = depthData[y0 * width + x1] || 0.5;
+      const d01 = depthData[y1 * width + x0] || 0.5;
+      const d11 = depthData[y1 * width + x1] || 0.5;
+      
+      const d0 = d00 * (1 - wx) + d10 * wx;
+      const d1 = d01 * (1 - wx) + d11 * wx;
+      
+      return d0 * (1 - wy) + d1 * wy;
+    }
+    
+    _createBumpMap(depthMap) {
+      console.log('🏔️ Creating bump map from depth data...');
+      
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = depthMap.width;
+      canvas.height = depthMap.height;
+      
+      const imageData = ctx.createImageData(canvas.width, canvas.height);
+      const data = imageData.data;
+      
+      for (let i = 0; i < depthMap.data.length; i++) {
+        const depth = depthMap.data[i];
+        const intensity = Math.floor(depth * 255);
+        
+        const pixelIndex = i * 4;
+        data[pixelIndex] = intensity;     // R
+        data[pixelIndex + 1] = intensity; // G
+        data[pixelIndex + 2] = intensity; // B
+        data[pixelIndex + 3] = 255;       // A
+      }
+      
+      ctx.putImageData(imageData, 0, 0);
+      
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.needsUpdate = true;
+      
+      console.log('✅ Bump map created');
+      return texture;
     }
     
     _generateBackTexture(frontTextureUrl) {
