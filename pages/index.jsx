@@ -54,22 +54,17 @@ const HomePage = () => {
             <Card>
               <BlockStack gap="200">
                 <Text as="h2" variant="headingMd">
-                  App Bridge CDN
+                  Welcome to Q-Blocks
                 </Text>
-                <Text>AppBridge has moved from an npm package to CDN</Text>
+                <Text>Your powerful Shopify app for managing blocks and content.</Text>
                 <InlineStack wrap={false} align="end">
                   <Button
                     variant="primary"
-                    external
-                    icon={ExternalIcon}
                     onClick={() => {
-                      open(
-                        "https://shopify.dev/docs/api/app-bridge-library/reference",
-                        "_blank"
-                      );
+                      router.push("/blocks");
                     }}
                   >
-                    Explore
+                    Get Started
                   </Button>
                 </InlineStack>
               </BlockStack>
@@ -79,65 +74,19 @@ const HomePage = () => {
             <Card>
               <BlockStack gap="200">
                 <Text as="h2" variant="headingMd">
-                  Repository
+                  About Q-Blocks
                 </Text>
                 <Text>
-                  Found a bug? Open an issue on the repository, or star on
-                  GitHub
-                </Text>
-                <InlineStack wrap={false} align="end" gap="200">
-                  <Button
-                    external
-                    icon={ExternalIcon}
-                    onClick={() => {
-                      open(
-                        "https://github.com/kinngh/shopify-nextjs-prisma-app/issues?q=is%3Aissue",
-                        "_blank"
-                      );
-                    }}
-                  >
-                    Issues
-                  </Button>
-                  <Button
-                    external
-                    variant="primary"
-                    icon={ExternalIcon}
-                    onClick={() => {
-                      open(
-                        "https://github.com/kinngh/shopify-nextjs-prisma-app",
-                        "_blank"
-                      );
-                    }}
-                  >
-                    Star
-                  </Button>
-                </InlineStack>
-              </BlockStack>
-            </Card>
-          </Layout.Section>
-          <Layout.Section variant="oneHalf">
-            <Card>
-              <BlockStack gap="200">
-                <Text as="h2" variant="headingMd">
-                  Course
-                </Text>
-                <Text>
-                  [BETA] I'm building course as a live service on How To Build
-                  Shopify Apps
+                  Easily manage and organize your Shopify store content with our intuitive block system.
                 </Text>
                 <InlineStack wrap={false} align="end">
                   <Button
-                    external
                     variant="primary"
-                    icon={ExternalIcon}
                     onClick={() => {
-                      open(
-                        "https://kinngh.gumroad.com/l/how-to-make-shopify-apps?utm_source=boilerplate&utm_medium=nextjs",
-                        "_blank"
-                      );
+                      router.push("/settings");
                     }}
                   >
-                    Buy
+                    Settings
                   </Button>
                 </InlineStack>
               </BlockStack>
