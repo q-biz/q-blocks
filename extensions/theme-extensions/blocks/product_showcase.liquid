@@ -313,86 +313,245 @@ function initializeModel{{ block.id | replace: '-', '_' }}() {
   scene.add(directionalLight);
   console.log('✅ Lighting setup complete');
   
-  // Create 3D plane with product image
-  console.log('🖼️ Creating 3D plane with product image...');
+  // Create intelligent 3D object with background removal and view synthesis
+  console.log('🖼️ Creating smart 3D object from product image...');
   const imageUrl = '{{ product.featured_image | image_url: width: 600 }}';
   
-  // Load texture
-  const textureLoader = new THREE.TextureLoader();
-  textureLoader.crossOrigin = 'anonymous';
-  
-  textureLoader.load(
-    imageUrl,
-    function(texture) {
-      console.log('✅ Image texture loaded successfully!');
+  // Process image for background removal and 3D conversion
+  processImageFor3D(imageUrl, function(processedTextures) {
+    console.log('✅ Image processing complete, creating 3D object...');
+    
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = function() {
+      const aspectRatio = img.width / img.height;
       
-      // Create geometry based on image aspect ratio
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.onload = function() {
-        const aspectRatio = img.width / img.height;
-        const planeWidth = aspectRatio > 1 ? 2 : 2 * aspectRatio;
-        const planeHeight = aspectRatio > 1 ? 2 / aspectRatio : 2;
-        
-        console.log('📐 Image dimensions:', {
-          width: img.width,
-          height: img.height,
-          aspectRatio: aspectRatio,
-          planeSize: [planeWidth, planeHeight]
-        });
-        
-        // Create plane geometry
-        const geometry = new THREE.PlaneGeometry(planeWidth, planeHeight);
-        
-        // Create material with the image texture
-        const material = new THREE.MeshLambertMaterial({
-          map: texture,
-          transparent: true,
-          side: THREE.DoubleSide
-        });
-        
-        // Create 3D object
-        window['model_{{ block.id | replace: "-", "_" }}'] = new THREE.Mesh(geometry, material);
-        const model = window['model_{{ block.id | replace: "-", "_" }}'];
-        
-        // Apply scale
-        const scale = {{ block.settings.model_scale | default: 1.5 }};
-        model.scale.setScalar(scale);
-        
-        scene.add(model);
-        
-        // Position camera
-        camera.position.z = {{ block.settings.camera_distance | default: 3 }};
-        camera.position.y = {{ block.settings.camera_height | default: 0 }};
-        
-        console.log('📷 Camera positioned at:', {
-          position: camera.position,
-          aspect: camera.aspect
-        });
-        
-        // Hide loading indicator
-        if (loading) {
-          loading.style.display = 'none';
-          console.log('✅ Loading indicator hidden');
-        }
-        
-        // Start animation loop
-        console.log('🎬 Starting animation loop...');
-        animate();
-      };
-      img.src = imageUrl;
-    },
-    function(progress) {
-      console.log('📊 Loading progress:', Math.round((progress.loaded / progress.total) * 100) + '%');
-    },
-    function(error) {
-      console.error('❌ Error loading image texture:', error);
+      console.log('📐 Image dimensions:', {
+        width: img.width,
+        height: img.height,
+        aspectRatio: aspectRatio
+      });
+      
+      // Create 3D geometry based on product type (default to cylinder for now)
+      const geometry = createSmartGeometry(aspectRatio);
+      
+      // Create materials with processed textures
+      const materials = createSmartMaterials(processedTextures);
+      
+      // Create 3D object
+      window['model_{{ block.id | replace: "-", "_" }}'] = new THREE.Mesh(geometry, materials);
+      const model = window['model_{{ block.id | replace: "-", "_" }}'];
+      
+      // Apply scale
+      const scale = {{ block.settings.model_scale | default: 1.5 }};
+      model.scale.setScalar(scale);
+      
+      scene.add(model);
+      
+      // Position camera
+      camera.position.z = {{ block.settings.camera_distance | default: 3 }};
+      camera.position.y = {{ block.settings.camera_height | default: 0 }};
+      
+      console.log('📷 Camera positioned at:', {
+        position: camera.position,
+        aspect: camera.aspect
+      });
+      
+      // Hide loading indicator
       if (loading) {
         loading.style.display = 'none';
-        console.log('🔄 Loading indicator hidden after error');
+        console.log('✅ Loading indicator hidden');
+      }
+      
+      // Start animation loop
+      console.log('🎬 Starting animation loop...');
+      animate();
+    };
+    img.src = imageUrl;
+  });
+  
+  // Function to process image for 3D conversion
+  function processImageFor3D(imageUrl, callback) {
+    console.log('🤖 Processing image for 3D conversion...');
+    
+    // Load original image
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = function() {
+      // Create canvas for image processing
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx.drawImage(img, 0, 0);
+      
+      // Step 1: Remove background
+      removeBackground(canvas, function(cleanImage) {
+        console.log('✅ Background removed');
+        
+        // Step 2: Generate additional views using AI
+        generateAdditionalViews(cleanImage, function(views) {
+          console.log('✅ Additional views generated:', views.length);
+          
+          // Create textures from processed images
+          const textureLoader = new THREE.TextureLoader();
+          const processedTextures = {
+            front: textureLoader.load(cleanImage),
+            back: views.back ? textureLoader.load(views.back) : textureLoader.load(cleanImage),
+            sides: views.sides || []
+          };
+          
+          callback(processedTextures);
+        });
+      });
+    };
+    img.src = imageUrl;
+  }
+  
+  // Function to remove background using canvas processing
+  function removeBackground(canvas, callback) {
+    console.log('🎨 Removing background...');
+    const ctx = canvas.getContext('2d');
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+    
+    // Simple background removal based on edge detection and color similarity
+    // This is a basic implementation - for production, you'd use AI services
+    const corners = [
+      data.slice(0, 4), // top-left
+      data.slice((canvas.width - 1) * 4, (canvas.width - 1) * 4 + 4), // top-right
+      data.slice((canvas.height - 1) * canvas.width * 4, (canvas.height - 1) * canvas.width * 4 + 4), // bottom-left
+      data.slice(((canvas.height - 1) * canvas.width + (canvas.width - 1)) * 4, ((canvas.height - 1) * canvas.width + (canvas.width - 1)) * 4 + 4) // bottom-right
+    ];
+    
+    // Determine background color (most common corner color)
+    const bgColor = getMostCommonColor(corners);
+    console.log('🎯 Detected background color:', bgColor);
+    
+    // Remove background pixels
+    for (let i = 0; i < data.length; i += 4) {
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+      
+      // Check if pixel is similar to background
+      const sensitivity = {{ block.settings.bg_removal_sensitivity | default: 5 }};
+      const threshold = sensitivity * 10; // Convert 1-10 scale to 10-100 threshold
+      if (isColorSimilar([r, g, b], bgColor, threshold)) {
+        data[i + 3] = 0; // Make transparent
       }
     }
-  );
+    
+    ctx.putImageData(imageData, 0, 0);
+    callback(canvas.toDataURL());
+  }
+  
+  // Function to generate additional views (simplified - in production use AI APIs)
+  function generateAdditionalViews(frontImage, callback) {
+    console.log('🔄 Generating additional product views...');
+    
+    // For now, create a mirrored/processed back view
+    // In production, you'd call AI services like:
+    // - Stability AI for view synthesis
+    // - Remove.bg for better background removal
+    // - Custom trained models for product view generation
+    
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    
+    img.onload = function() {
+      canvas.width = img.width;
+      canvas.height = img.height;
+      
+      // Create back view by flipping and darkening slightly
+      ctx.scale(-1, 1);
+      ctx.translate(-canvas.width, 0);
+      ctx.filter = 'brightness(0.8) contrast(0.9)';
+      ctx.drawImage(img, 0, 0);
+      
+      const backView = canvas.toDataURL();
+      
+      // Generate side views (simplified)
+      const sideViews = generateSideViews(img);
+      
+      callback({
+        back: backView,
+        sides: sideViews
+      });
+    };
+    img.src = frontImage;
+  }
+  
+  // Function to create smart geometry based on product
+  function createSmartGeometry(aspectRatio) {
+    console.log('🏗️ Creating smart geometry...');
+    const objectShape = '{{ block.settings.object_shape | default: "auto" }}';
+    
+    let geometry;
+    
+    if (objectShape === 'auto') {
+      // Auto-detect based on aspect ratio
+      if (aspectRatio > 1.2) {
+        // Wide products - use box geometry
+        geometry = new THREE.BoxGeometry(2, 2 / aspectRatio, 0.5);
+        console.log('📦 Auto-selected: Box geometry for wide product');
+      } else {
+        // Tall or square products - use cylinder
+        geometry = new THREE.CylinderGeometry(0.8, 0.8, 2, 16);
+        console.log('🛢️ Auto-selected: Cylinder geometry for tall/square product');
+      }
+    } else if (objectShape === 'cylinder') {
+      geometry = new THREE.CylinderGeometry(0.8, 0.8, 2, 16);
+      console.log('🛢️ User-selected: Cylinder geometry');
+    } else if (objectShape === 'box') {
+      geometry = new THREE.BoxGeometry(2, 2 / aspectRatio, 0.5);
+      console.log('📦 User-selected: Box geometry');
+    }
+    
+    return geometry;
+  }
+  
+  // Function to create materials for different faces
+  function createSmartMaterials(textures) {
+    console.log('🎨 Creating smart materials...');
+    
+    return [
+      new THREE.MeshLambertMaterial({ map: textures.front, transparent: true }), // front
+      new THREE.MeshLambertMaterial({ map: textures.back, transparent: true }),  // back
+      new THREE.MeshLambertMaterial({ map: textures.front, transparent: true }), // top
+      new THREE.MeshLambertMaterial({ map: textures.front, transparent: true }), // bottom
+      new THREE.MeshLambertMaterial({ map: textures.front, transparent: true }), // right
+      new THREE.MeshLambertMaterial({ map: textures.front, transparent: true })  // left
+    ];
+  }
+  
+  // Helper functions
+  function getMostCommonColor(corners) {
+    // Simplified - return average of corner colors
+    const avg = [0, 0, 0];
+    corners.forEach(corner => {
+      avg[0] += corner[0];
+      avg[1] += corner[1];
+      avg[2] += corner[2];
+    });
+    return [avg[0] / corners.length, avg[1] / corners.length, avg[2] / corners.length];
+  }
+  
+  function isColorSimilar(color1, color2, threshold) {
+    const diff = Math.sqrt(
+      Math.pow(color1[0] - color2[0], 2) +
+      Math.pow(color1[1] - color2[1], 2) +
+      Math.pow(color1[2] - color2[2], 2)
+    );
+    return diff < threshold;
+  }
+  
+  function generateSideViews(img) {
+    // Simplified side view generation
+    // In production, use AI for proper view synthesis
+    return [];
+  }
   
   // Animation loop
   let animationStarted = false;
@@ -540,6 +699,37 @@ function initializeModel{{ block.id | replace: '-', '_' }}() {
       "label": "Enable Gentle Bobbing Animation",
       "default": false,
       "info": "Adds a subtle up-down movement to the model"
+    },
+    {
+      "type": "select",
+      "id": "object_shape",
+      "label": "3D Object Shape",
+      "options": [
+        {
+          "value": "auto",
+          "label": "Auto-detect (Recommended)"
+        },
+        {
+          "value": "cylinder",
+          "label": "Cylinder (Round products)"
+        },
+        {
+          "value": "box",
+          "label": "Box (Rectangular products)"
+        }
+      ],
+      "default": "auto",
+      "info": "Choose the 3D shape that best fits your product"
+    },
+    {
+      "type": "range",
+      "id": "bg_removal_sensitivity",
+      "label": "Background Removal Sensitivity",
+      "min": 1,
+      "max": 10,
+      "step": 1,
+      "default": 5,
+      "info": "Higher values remove more background (1=conservative, 10=aggressive)"
     },
     {
       "type": "text",
