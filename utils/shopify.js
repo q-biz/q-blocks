@@ -9,7 +9,7 @@ let shopify = shopifyApi({
   apiKey: process.env.SHOPIFY_API_KEY,
   apiSecretKey: process.env.SHOPIFY_API_SECRET,
   scopes: process.env.SHOPIFY_API_SCOPES,
-  hostName: process.env.SHOPIFY_APP_URL.replace(/https:\/\//, ""),
+  hostName: process.env.SHOPIFY_APP_URL ? process.env.SHOPIFY_APP_URL.replace(/https:\/\//, "") : "localhost:3000",
   hostScheme: "https",
   apiVersion: process.env.SHOPIFY_API_VERSION,
   isEmbeddedApp: true,
