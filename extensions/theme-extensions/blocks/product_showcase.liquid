@@ -1,0 +1,215 @@
+{% comment %}
+  Product Showcase Theme App Extension Block
+  Two-column layout: Left - Product image, Right - Text content
+{% endcomment %}
+
+<div class="product-showcase-block" {{ block.shopify_attributes }}>
+  <style>
+    .product-showcase-block {
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      padding: 2rem;
+      margin: 1rem 0;
+      max-width: 100%;
+    }
+    
+    .product-showcase-left {
+      flex: 1;
+      min-width: 0;
+    }
+    
+    .product-showcase-right {
+      flex: 1;
+      min-width: 0;
+    }
+    
+    .product-image {
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+      object-fit: cover;
+      max-height: 400px;
+    }
+    
+    .placeholder-image {
+      width: 100%;
+      height: 300px;
+      background: #f5f5f5;
+      border: 2px dashed #ccc;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #666;
+      font-size: 1rem;
+      text-align: center;
+    }
+    
+    .content-title {
+      font-size: {{ block.settings.title_size }}px;
+      font-weight: bold;
+      color: {{ block.settings.title_color }};
+      margin: 0 0 1rem 0;
+      line-height: 1.2;
+    }
+    
+    .content-subtitle {
+      font-size: {{ block.settings.subtitle_size }}px;
+      color: {{ block.settings.subtitle_color }};
+      margin: 0 0 1.5rem 0;
+      line-height: 1.4;
+      font-weight: 500;
+    }
+    
+    .content-paragraph {
+      font-size: {{ block.settings.text_size }}px;
+      color: {{ block.settings.text_color }};
+      line-height: 1.6;
+      margin: 0;
+    }
+    
+    @media (max-width: 768px) {
+      .product-showcase-block {
+        flex-direction: column;
+        gap: 1.5rem;
+        padding: 1.5rem;
+      }
+      
+      .product-showcase-left,
+      .product-showcase-right {
+        flex: none;
+        width: 100%;
+      }
+    }
+  </style>
+  
+  <div class="product-showcase-left">
+    {% if block.settings.product != blank %}
+      {% assign product = all_products[block.settings.product] %}
+      {% if product.featured_image %}
+        <img 
+          src="{{ product.featured_image | image_url: width: 600 }}" 
+          alt="{{ product.featured_image.alt | default: product.title }}"
+          class="product-image"
+          loading="lazy"
+        />
+      {% else %}
+        <div class="placeholder-image">
+          <span>{{ product.title }}<br>No image available</span>
+        </div>
+      {% endif %}
+    {% else %}
+      <div class="placeholder-image">
+        <span>Select a product to display its image</span>
+      </div>
+    {% endif %}
+  </div>
+  
+  <div class="product-showcase-right">
+    {% if block.settings.title != blank %}
+      <h2 class="content-title">{{ block.settings.title }}</h2>
+    {% endif %}
+    
+    {% if block.settings.subtitle != blank %}
+      <h3 class="content-subtitle">{{ block.settings.subtitle }}</h3>
+    {% endif %}
+    
+    {% if block.settings.paragraph != blank %}
+      <p class="content-paragraph">{{ block.settings.paragraph }}</p>
+    {% endif %}
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Product Showcase",
+  "target": "section",
+  "settings": [
+    {
+      "type": "product",
+      "id": "product",
+      "label": "Select Product"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Title",
+      "default": "Featured Product"
+    },
+    {
+      "type": "text",
+      "id": "subtitle",
+      "label": "Subtitle",
+      "default": "Discover something amazing"
+    },
+    {
+      "type": "textarea",
+      "id": "paragraph",
+      "label": "Description",
+      "default": "Add your product description here. This is a great place to highlight key features and benefits that make your product special."
+    },
+    {
+      "type": "header",
+      "content": "Title Styling"
+    },
+    {
+      "type": "range",
+      "id": "title_size",
+      "label": "Title Font Size",
+      "min": 16,
+      "max": 48,
+      "step": 2,
+      "default": 32,
+      "unit": "px"
+    },
+    {
+      "type": "color",
+      "id": "title_color",
+      "label": "Title Color",
+      "default": "#000000"
+    },
+    {
+      "type": "header",
+      "content": "Subtitle Styling"
+    },
+    {
+      "type": "range",
+      "id": "subtitle_size",
+      "label": "Subtitle Font Size",
+      "min": 12,
+      "max": 32,
+      "step": 2,
+      "default": 20,
+      "unit": "px"
+    },
+    {
+      "type": "color",
+      "id": "subtitle_color",
+      "label": "Subtitle Color",
+      "default": "#666666"
+    },
+    {
+      "type": "header",
+      "content": "Text Styling"
+    },
+    {
+      "type": "range",
+      "id": "text_size",
+      "label": "Text Font Size",
+      "min": 12,
+      "max": 24,
+      "step": 1,
+      "default": 16,
+      "unit": "px"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text Color",
+      "default": "#333333"
+    }
+  ]
+}
+{% endschema %}
+
