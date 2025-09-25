@@ -1,0 +1,36 @@
+{{ 'app-block.css' | asset_url | stylesheet_tag }}
+
+<div class="hello-world-app-block" {{ block.shopify_attributes }}>
+  <div class="hello-world-content">
+    <h2>{{ block.settings.heading | default: "Hello World from Q-Blocks!" }}</h2>
+    <p>{{ block.settings.text | default: "This is a theme app extension block." }}</p>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Hello World Block",
+  "target": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Hello World from Q-Blocks!"
+    },
+    {
+      "type": "textarea",
+      "id": "text",
+      "label": "Text",
+      "default": "This is a theme app extension block."
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text Color",
+      "default": "#000000"
+    }
+  ]
+}
+{% endschema %}
+
