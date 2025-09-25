@@ -190,8 +190,10 @@
   </div>
 </div>
 
-<!-- Three.js CDN -->
+<!-- Three.js CDN and Advanced Libraries -->
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.20.0/dist/tf.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@tensorflow-models/depth-estimation@0.0.6/dist/depth-estimation.min.js"></script>
 
 <script>
 // Global error handler for 3D debugging
@@ -313,40 +315,26 @@ function initializeModel{{ block.id | replace: '-', '_' }}() {
   scene.add(directionalLight);
   console.log('✅ Lighting setup complete');
   
-  // Create intelligent 3D object with background removal and view synthesis
-  console.log('🖼️ Creating smart 3D object from product image...');
+  // Create realistic 3D object with AI depth estimation
+  console.log('🖼️ Creating realistic 3D object from product image...');
   const imageUrl = '{{ product.featured_image | image_url: width: 600 }}';
   
-  // Process image for background removal and 3D conversion
-  processImageFor3D(imageUrl, function(processedTextures) {
-    console.log('✅ Image processing complete, creating 3D object...');
+  // Wait for TensorFlow and depth estimation models to load
+  waitForAIModels(function() {
+    console.log('🤖 AI models loaded, processing image...');
     
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = function() {
-      const aspectRatio = img.width / img.height;
+    // Process image for realistic 3D conversion
+    createRealistic3DObject(imageUrl, function(mesh) {
+      console.log('✅ Realistic 3D object created!');
       
-      console.log('📐 Image dimensions:', {
-        width: img.width,
-        height: img.height,
-        aspectRatio: aspectRatio
-      });
-      
-      // Create 3D geometry based on product type (default to cylinder for now)
-      const geometry = createSmartGeometry(aspectRatio);
-      
-      // Create materials with processed textures
-      const materials = createSmartMaterials(processedTextures);
-      
-      // Create 3D object
-      window['model_{{ block.id | replace: "-", "_" }}'] = new THREE.Mesh(geometry, materials);
-      const model = window['model_{{ block.id | replace: "-", "_" }}'];
+      // Store the mesh
+      window['model_{{ block.id | replace: "-", "_" }}'] = mesh;
       
       // Apply scale
       const scale = {{ block.settings.model_scale | default: 1.5 }};
-      model.scale.setScalar(scale);
+      mesh.scale.setScalar(scale);
       
-      scene.add(model);
+      scene.add(mesh);
       
       // Position camera
       camera.position.z = {{ block.settings.camera_distance | default: 3 }};
@@ -366,84 +354,210 @@ function initializeModel{{ block.id | replace: '-', '_' }}() {
       // Start animation loop
       console.log('🎬 Starting animation loop...');
       animate();
-    };
-    img.src = imageUrl;
+    });
   });
   
-  // Function to process image for 3D conversion
-  function processImageFor3D(imageUrl, callback) {
-    console.log('🤖 Processing image for 3D conversion...');
+  // Wait for AI models to load
+  function waitForAIModels(callback) {
+    let tfLoaded = false;
+    let depthLoaded = false;
     
-    // Load original image
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = function() {
-      // Create canvas for image processing
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      canvas.width = img.width;
-      canvas.height = img.height;
-      ctx.drawImage(img, 0, 0);
-      
-      // Step 1: Remove background
-      removeBackground(canvas, function(cleanImage) {
-        console.log('✅ Background removed');
-        
-        // Step 2: Generate additional views using AI
-        generateAdditionalViews(cleanImage, function(views) {
-          console.log('✅ Additional views generated:', views.length);
-          
-          // Create textures from processed images
-          const textureLoader = new THREE.TextureLoader();
-          const processedTextures = {
-            front: textureLoader.load(cleanImage),
-            back: views.back ? textureLoader.load(views.back) : textureLoader.load(cleanImage),
-            sides: views.sides || []
-          };
-          
-          callback(processedTextures);
-        });
-      });
-    };
-    img.src = imageUrl;
+    function checkLoaded() {
+      if (tfLoaded && depthLoaded) {
+        callback();
+      }
+    }
+    
+    // Check if TensorFlow is loaded
+    if (typeof tf !== 'undefined') {
+      tfLoaded = true;
+      console.log('✅ TensorFlow.js loaded');
+    } else {
+      const checkTF = setInterval(() => {
+        if (typeof tf !== 'undefined') {
+          tfLoaded = true;
+          console.log('✅ TensorFlow.js loaded');
+          clearInterval(checkTF);
+          checkLoaded();
+        }
+      }, 100);
+    }
+    
+    // Check if depth estimation is loaded
+    if (typeof depthEstimation !== 'undefined') {
+      depthLoaded = true;
+      console.log('✅ Depth estimation loaded');
+    } else {
+      const checkDepth = setInterval(() => {
+        if (typeof depthEstimation !== 'undefined') {
+          depthLoaded = true;
+          console.log('✅ Depth estimation loaded');
+          clearInterval(checkDepth);
+          checkLoaded();
+        }
+      }, 100);
+    }
+    
+    checkLoaded();
   }
   
-  // Function to remove background using canvas processing
-  function removeBackground(canvas, callback) {
-    console.log('🎨 Removing background...');
+  // Create realistic 3D object from image
+  async function createRealistic3DObject(imageUrl, callback) {
+    console.log('🎨 Creating realistic 3D object...');
+    
+    try {
+      // Load image
+      const img = await loadImage(imageUrl);
+      console.log('📷 Image loaded for processing');
+      
+      // Step 1: Remove background
+      const cleanImage = await removeBackgroundAdvanced(img);
+      console.log('✅ Advanced background removal complete');
+      
+      // Step 2: Generate depth map using AI
+      const depthMap = await generateDepthMap(cleanImage);
+      console.log('✅ AI depth map generated');
+      
+      // Step 3: Create 3D mesh from depth data
+      const mesh = await createMeshFromDepth(cleanImage, depthMap);
+      console.log('✅ Realistic 3D mesh created');
+      
+      callback(mesh);
+      
+    } catch (error) {
+      console.error('❌ Error creating realistic 3D object:', error);
+      
+      // Fallback to simple geometry
+      console.log('🔄 Falling back to simple 3D object...');
+      const fallbackMesh = createFallback3DObject(imageUrl);
+      callback(fallbackMesh);
+    }
+  }
+  
+  // Load image with promise
+  function loadImage(src) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = src;
+    });
+  }
+  
+  // Advanced background removal using edge detection and AI-like processing
+  async function removeBackgroundAdvanced(img) {
+    console.log('🤖 Advanced background removal...');
+    
+    const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
+    canvas.width = img.width;
+    canvas.height = img.height;
+    ctx.drawImage(img, 0, 0);
+    
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     const data = imageData.data;
     
-    // Simple background removal based on edge detection and color similarity
-    // This is a basic implementation - for production, you'd use AI services
-    const corners = [
-      data.slice(0, 4), // top-left
-      data.slice((canvas.width - 1) * 4, (canvas.width - 1) * 4 + 4), // top-right
-      data.slice((canvas.height - 1) * canvas.width * 4, (canvas.height - 1) * canvas.width * 4 + 4), // bottom-left
-      data.slice(((canvas.height - 1) * canvas.width + (canvas.width - 1)) * 4, ((canvas.height - 1) * canvas.width + (canvas.width - 1)) * 4 + 4) // bottom-right
-    ];
+    // Advanced edge detection and segmentation
+    const edges = detectEdges(imageData);
+    const segments = segmentImage(imageData, edges);
     
-    // Determine background color (most common corner color)
-    const bgColor = getMostCommonColor(corners);
-    console.log('🎯 Detected background color:', bgColor);
+    // Find the main object (largest connected component)
+    const mainObject = findMainObject(segments);
     
-    // Remove background pixels
+    // Create mask for the main object
     for (let i = 0; i < data.length; i += 4) {
-      const r = data[i];
-      const g = data[i + 1];
-      const b = data[i + 2];
+      const pixelIndex = i / 4;
+      const x = pixelIndex % canvas.width;
+      const y = Math.floor(pixelIndex / canvas.width);
       
-      // Check if pixel is similar to background
-      const sensitivity = {{ block.settings.bg_removal_sensitivity | default: 5 }};
-      const threshold = sensitivity * 10; // Convert 1-10 scale to 10-100 threshold
-      if (isColorSimilar([r, g, b], bgColor, threshold)) {
-        data[i + 3] = 0; // Make transparent
+      if (!mainObject.has(pixelIndex)) {
+        data[i + 3] = 0; // Make background transparent
       }
     }
     
     ctx.putImageData(imageData, 0, 0);
-    callback(canvas.toDataURL());
+    return canvas.toDataURL();
+  }
+  
+  // Generate depth map using AI
+  async function generateDepthMap(imageDataUrl) {
+    console.log('🧠 Generating AI depth map...');
+    
+    try {
+      // Load depth estimation model
+      const model = await depthEstimation.createEstimator(
+        depthEstimation.SupportedModels.ARPortraitDepth
+      );
+      
+      // Create image element from data URL
+      const img = await loadImage(imageDataUrl);
+      
+      // Estimate depth
+      const depthMap = await model.estimateDepth(img);
+      console.log('✅ Depth estimation complete');
+      
+      return depthMap;
+      
+    } catch (error) {
+      console.log('⚠️ AI depth estimation failed, using procedural depth');
+      
+      // Fallback: procedural depth based on image content
+      return generateProceduralDepth(imageDataUrl);
+    }
+  }
+  
+  // Create 3D mesh from image and depth data
+  async function createMeshFromDepth(imageDataUrl, depthMap) {
+    console.log('🏗️ Creating 3D mesh from depth data...');
+    
+    const img = await loadImage(imageDataUrl);
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = img.width;
+    canvas.height = img.height;
+    ctx.drawImage(img, 0, 0);
+    
+    // Create high-resolution geometry
+    const width = 64; // Mesh resolution
+    const height = 64;
+    const geometry = new THREE.PlaneGeometry(2, 2, width - 1, height - 1);
+    
+    // Apply displacement from depth map
+    const vertices = geometry.attributes.position.array;
+    const depthData = depthMap.data || depthMap;
+    
+    for (let i = 0; i < vertices.length; i += 3) {
+      const x = (vertices[i] + 1) * 0.5; // Convert from -1,1 to 0,1
+      const y = (vertices[i + 1] + 1) * 0.5;
+      
+      // Sample depth value
+      const depthX = Math.floor(x * (depthData.width || width));
+      const depthY = Math.floor(y * (depthData.height || height));
+      const depthIndex = depthY * (depthData.width || width) + depthX;
+      
+      // Apply depth displacement
+      const depth = (depthData[depthIndex] || 0.5) - 0.5;
+      vertices[i + 2] = depth * 0.3; // Z displacement
+    }
+    
+    geometry.attributes.position.needsUpdate = true;
+    geometry.computeVertexNormals();
+    
+    // Create realistic material
+    const texture = new THREE.TextureLoader().load(imageDataUrl);
+    const material = new THREE.MeshPhongMaterial({
+      map: texture,
+      transparent: true,
+      side: THREE.DoubleSide,
+      shininess: 30,
+      specular: 0x111111
+    });
+    
+    const mesh = new THREE.Mesh(geometry, material);
+    console.log('✅ Realistic 3D mesh created with', vertices.length / 3, 'vertices');
+    
+    return mesh;
   }
   
   // Function to generate additional views (simplified - in production use AI APIs)
@@ -526,19 +640,91 @@ function initializeModel{{ block.id | replace: '-', '_' }}() {
     ];
   }
   
-  // Helper functions
-  function getMostCommonColor(corners) {
-    // Simplified - return average of corner colors
-    const avg = [0, 0, 0];
-    corners.forEach(corner => {
-      avg[0] += corner[0];
-      avg[1] += corner[1];
-      avg[2] += corner[2];
-    });
-    return [avg[0] / corners.length, avg[1] / corners.length, avg[2] / corners.length];
+  // Helper functions for advanced image processing
+  function detectEdges(imageData) {
+    console.log('🔍 Detecting edges...');
+    const { data, width, height } = imageData;
+    const edges = new Uint8Array(width * height);
+    
+    // Sobel edge detection
+    for (let y = 1; y < height - 1; y++) {
+      for (let x = 1; x < width - 1; x++) {
+        const idx = (y * width + x) * 4;
+        
+        // Get surrounding pixels
+        const tl = getGrayscale(data, (y - 1) * width + (x - 1));
+        const tm = getGrayscale(data, (y - 1) * width + x);
+        const tr = getGrayscale(data, (y - 1) * width + (x + 1));
+        const ml = getGrayscale(data, y * width + (x - 1));
+        const mr = getGrayscale(data, y * width + (x + 1));
+        const bl = getGrayscale(data, (y + 1) * width + (x - 1));
+        const bm = getGrayscale(data, (y + 1) * width + x);
+        const br = getGrayscale(data, (y + 1) * width + (x + 1));
+        
+        // Sobel operators
+        const gx = (-1 * tl) + (1 * tr) + (-2 * ml) + (2 * mr) + (-1 * bl) + (1 * br);
+        const gy = (-1 * tl) + (-2 * tm) + (-1 * tr) + (1 * bl) + (2 * bm) + (1 * br);
+        
+        const magnitude = Math.sqrt(gx * gx + gy * gy);
+        edges[y * width + x] = magnitude > 50 ? 255 : 0;
+      }
+    }
+    
+    return edges;
   }
   
-  function isColorSimilar(color1, color2, threshold) {
+  function getGrayscale(data, index) {
+    const i = index * 4;
+    return (data[i] + data[i + 1] + data[i + 2]) / 3;
+  }
+  
+  function segmentImage(imageData, edges) {
+    // Simplified segmentation based on color similarity and edges
+    const { data, width, height } = imageData;
+    const segments = new Array(width * height).fill(0);
+    let segmentId = 1;
+    
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const idx = y * width + x;
+        if (segments[idx] === 0 && edges[idx] === 0) {
+          floodFill(data, segments, x, y, width, height, segmentId++);
+        }
+      }
+    }
+    
+    return segments;
+  }
+  
+  function floodFill(data, segments, startX, startY, width, height, segmentId) {
+    const stack = [[startX, startY]];
+    const startColor = getPixelColor(data, startX, startY, width);
+    
+    while (stack.length > 0) {
+      const [x, y] = stack.pop();
+      const idx = y * width + x;
+      
+      if (x < 0 || x >= width || y < 0 || y >= height || segments[idx] !== 0) {
+        continue;
+      }
+      
+      const currentColor = getPixelColor(data, x, y, width);
+      if (!colorsAreSimilar(startColor, currentColor, 30)) {
+        continue;
+      }
+      
+      segments[idx] = segmentId;
+      
+      stack.push([x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]);
+    }
+  }
+  
+  function getPixelColor(data, x, y, width) {
+    const idx = (y * width + x) * 4;
+    return [data[idx], data[idx + 1], data[idx + 2]];
+  }
+  
+  function colorsAreSimilar(color1, color2, threshold) {
     const diff = Math.sqrt(
       Math.pow(color1[0] - color2[0], 2) +
       Math.pow(color1[1] - color2[1], 2) +
@@ -547,10 +733,89 @@ function initializeModel{{ block.id | replace: '-', '_' }}() {
     return diff < threshold;
   }
   
-  function generateSideViews(img) {
-    // Simplified side view generation
-    // In production, use AI for proper view synthesis
-    return [];
+  function findMainObject(segments) {
+    // Find the largest segment (main object)
+    const segmentSizes = {};
+    for (let i = 0; i < segments.length; i++) {
+      const seg = segments[i];
+      segmentSizes[seg] = (segmentSizes[seg] || 0) + 1;
+    }
+    
+    let largestSegment = 0;
+    let largestSize = 0;
+    for (const [seg, size] of Object.entries(segmentSizes)) {
+      if (size > largestSize && seg !== '0') {
+        largestSize = size;
+        largestSegment = parseInt(seg);
+      }
+    }
+    
+    // Return set of pixels belonging to main object
+    const mainObjectPixels = new Set();
+    for (let i = 0; i < segments.length; i++) {
+      if (segments[i] === largestSegment) {
+        mainObjectPixels.add(i);
+      }
+    }
+    
+    return mainObjectPixels;
+  }
+  
+  function generateProceduralDepth(imageDataUrl) {
+    // Fallback procedural depth when AI fails
+    console.log('🔧 Generating procedural depth map...');
+    
+    return new Promise(async (resolve) => {
+      const img = await loadImage(imageDataUrl);
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx.drawImage(img, 0, 0);
+      
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const { data, width, height } = imageData;
+      const depthData = new Float32Array(width * height);
+      
+      // Generate depth based on brightness and distance from center
+      const centerX = width / 2;
+      const centerY = height / 2;
+      const maxDistance = Math.sqrt(centerX * centerX + centerY * centerY);
+      
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          const idx = (y * width + x) * 4;
+          const brightness = (data[idx] + data[idx + 1] + data[idx + 2]) / 3;
+          const distanceFromCenter = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2);
+          const normalizedDistance = distanceFromCenter / maxDistance;
+          
+          // Combine brightness and distance for depth
+          const depth = (brightness / 255) * (1 - normalizedDistance * 0.3);
+          depthData[y * width + x] = depth;
+        }
+      }
+      
+      resolve({
+        data: depthData,
+        width: width,
+        height: height
+      });
+    });
+  }
+  
+  function createFallback3DObject(imageUrl) {
+    console.log('🔄 Creating fallback 3D object...');
+    
+    // Simple textured plane as fallback
+    const geometry = new THREE.PlaneGeometry(2, 2);
+    const texture = new THREE.TextureLoader().load(imageUrl);
+    const material = new THREE.MeshLambertMaterial({
+      map: texture,
+      transparent: true,
+      side: THREE.DoubleSide
+    });
+    
+    return new THREE.Mesh(geometry, material);
   }
   
   // Animation loop
