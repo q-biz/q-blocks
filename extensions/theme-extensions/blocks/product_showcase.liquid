@@ -46,6 +46,63 @@
       text-align: center;
     }
     
+    .model-container {
+      position: relative;
+      width: 100%;
+      height: 400px;
+      border-radius: 8px;
+      overflow: hidden;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    }
+    
+    .model-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      border-radius: 8px;
+    }
+    
+    .loading-indicator {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(5px);
+      color: #333;
+      font-size: 14px;
+      z-index: 10;
+    }
+    
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #333;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 10px;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .fallback-image {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
     .content-title {
       font-size: {{ block.settings.title_size }}px;
       font-weight: bold;
@@ -87,7 +144,27 @@
   <div class="product-showcase-left">
     {% if block.settings.product != blank %}
       {% assign product = all_products[block.settings.product] %}
-      {% if product.featured_image %}
+      
+      {% if block.settings.model_url != blank %}
+        <!-- 3D Model Container -->
+        <div id="model-container-{{ block.id }}" class="model-container">
+          <canvas id="model-canvas-{{ block.id }}" class="model-canvas"></canvas>
+          <div id="loading-{{ block.id }}" class="loading-indicator">
+            <div class="spinner"></div>
+            <span>Loading 3D Model...</span>
+          </div>
+          <!-- Fallback image (hidden by default, shown if model fails) -->
+          {% if product.featured_image %}
+            <img 
+              id="fallback-image-{{ block.id }}"
+              src="{{ product.featured_image | image_url: width: 600 }}" 
+              alt="{{ product.featured_image.alt | default: product.title }}"
+              class="product-image fallback-image"
+              style="display: none;"
+            />
+          {% endif %}
+        </div>
+      {% elsif product.featured_image %}
         <img 
           src="{{ product.featured_image | image_url: width: 600 }}" 
           alt="{{ product.featured_image.alt | default: product.title }}"
@@ -101,7 +178,7 @@
       {% endif %}
     {% else %}
       <div class="placeholder-image">
-        <span>Select a product to display its image</span>
+        <span>Select a product to display</span>
       </div>
     {% endif %}
   </div>
@@ -121,6 +198,173 @@
   </div>
 </div>
 
+<!-- Three.js CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  {% if block.settings.model_url != blank %}
+    initializeModel{{ block.id | replace: '-', '_' }}();
+  {% endif %}
+});
+
+{% if block.settings.model_url != blank %}
+function initializeModel{{ block.id | replace: '-', '_' }}() {
+  const container = document.getElementById('model-container-{{ block.id }}');
+  const canvas = document.getElementById('model-canvas-{{ block.id }}');
+  const loading = document.getElementById('loading-{{ block.id }}');
+  const fallbackImage = document.getElementById('fallback-image-{{ block.id }}');
+  
+  if (!container || !canvas) return;
+  
+  // Scene setup
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(75, container.offsetWidth / container.offsetHeight, 0.1, 1000);
+  const renderer = new THREE.WebGLRenderer({ 
+    canvas: canvas, 
+    antialias: true, 
+    alpha: true 
+  });
+  
+  renderer.setSize(container.offsetWidth, container.offsetHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Optimize for performance
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  
+  // Lighting setup
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+  scene.add(ambientLight);
+  
+  const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+  directionalLight.position.set(10, 10, 5);
+  directionalLight.castShadow = true;
+  directionalLight.shadow.mapSize.width = 1024;
+  directionalLight.shadow.mapSize.height = 1024;
+  scene.add(directionalLight);
+  
+  const fillLight = new THREE.DirectionalLight(0xffffff, 0.3);
+  fillLight.position.set(-10, 0, -5);
+  scene.add(fillLight);
+  
+  // Model variables
+  let model = null;
+  let mixer = null;
+  let clock = new THREE.Clock();
+  
+  // Load model
+  const loader = new THREE.GLTFLoader();
+  loader.load(
+    '{{ block.settings.model_url }}',
+    function(gltf) {
+      model = gltf.scene;
+      
+      // Auto-scale and center model
+      const box = new THREE.Box3().setFromObject(model);
+      const size = box.getSize(new THREE.Vector3()).length();
+      const center = box.getCenter(new THREE.Vector3());
+      
+      model.position.x += (model.position.x - center.x);
+      model.position.y += (model.position.y - center.y);
+      model.position.z += (model.position.z - center.z);
+      
+      const scale = {{ block.settings.model_scale | default: 1.5 }} / size;
+      model.scale.setScalar(scale);
+      
+      // Enable shadows
+      model.traverse(function(child) {
+        if (child.isMesh) {
+          child.castShadow = true;
+          child.receiveShadow = true;
+        }
+      });
+      
+      scene.add(model);
+      
+      // Set camera position
+      camera.position.z = {{ block.settings.camera_distance | default: 3 }};
+      camera.position.y = {{ block.settings.camera_height | default: 0 }};
+      
+      // Hide loading indicator
+      if (loading) loading.style.display = 'none';
+      
+      // Start animation loop
+      animate();
+    },
+    function(progress) {
+      // Loading progress (optional)
+    },
+    function(error) {
+      console.error('Error loading 3D model:', error);
+      // Show fallback image
+      if (fallbackImage) {
+        fallbackImage.style.display = 'block';
+      }
+      if (loading) loading.style.display = 'none';
+    }
+  );
+  
+  // Animation loop
+  function animate() {
+    requestAnimationFrame(animate);
+    
+    if (model) {
+      // Continuous rotation
+      const rotationSpeed = {{ block.settings.rotation_speed | default: 0.01 }};
+      model.rotation.y += rotationSpeed;
+      
+      // Optional: slight up-down bobbing
+      {% if block.settings.enable_bobbing %}
+        model.position.y += Math.sin(clock.getElapsedTime() * 2) * 0.01;
+      {% endif %}
+    }
+    
+    if (mixer) {
+      mixer.update(clock.getDelta());
+    }
+    
+    renderer.render(scene, camera);
+  }
+  
+  // Handle window resize
+  function handleResize() {
+    if (!container || !camera || !renderer) return;
+    
+    const width = container.offsetWidth;
+    const height = container.offsetHeight;
+    
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+    renderer.setSize(width, height);
+  }
+  
+  window.addEventListener('resize', handleResize);
+  
+  // Handle visibility change for performance
+  document.addEventListener('visibilitychange', function() {
+    if (document.hidden) {
+      // Pause animation when tab is not visible
+      renderer.setAnimationLoop(null);
+    } else {
+      // Resume animation
+      renderer.setAnimationLoop(animate);
+    }
+  });
+  
+  // Cleanup function
+  window.addEventListener('beforeunload', function() {
+    if (renderer) {
+      renderer.dispose();
+    }
+    if (model) {
+      scene.remove(model);
+    }
+  });
+}
+{% endif %}
+</script>
+
 {% schema %}
 {
   "name": "Product Showcase",
@@ -130,6 +374,63 @@
       "type": "product",
       "id": "product",
       "label": "Select Product"
+    },
+    {
+      "type": "header",
+      "content": "3D Model Settings"
+    },
+    {
+      "type": "url",
+      "id": "model_url",
+      "label": "3D Model URL (.glb or .gltf)",
+      "info": "Upload your 3D model file and paste the URL here. Supports .glb and .gltf formats."
+    },
+    {
+      "type": "range",
+      "id": "rotation_speed",
+      "label": "Rotation Speed",
+      "min": 0,
+      "max": 0.05,
+      "step": 0.005,
+      "default": 0.01,
+      "info": "How fast the model rotates (0 = no rotation)"
+    },
+    {
+      "type": "range",
+      "id": "model_scale",
+      "label": "Model Scale",
+      "min": 0.5,
+      "max": 3.0,
+      "step": 0.1,
+      "default": 1.5,
+      "info": "Size of the 3D model"
+    },
+    {
+      "type": "range",
+      "id": "camera_distance",
+      "label": "Camera Distance",
+      "min": 1,
+      "max": 8,
+      "step": 0.5,
+      "default": 3,
+      "info": "How far the camera is from the model"
+    },
+    {
+      "type": "range",
+      "id": "camera_height",
+      "label": "Camera Height",
+      "min": -2,
+      "max": 2,
+      "step": 0.2,
+      "default": 0,
+      "info": "Vertical position of the camera"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_bobbing",
+      "label": "Enable Gentle Bobbing Animation",
+      "default": false,
+      "info": "Adds a subtle up-down movement to the model"
     },
     {
       "type": "text",
