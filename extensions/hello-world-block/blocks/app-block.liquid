@@ -1,15 +1,45 @@
-{{ 'app-block.css' | asset_url | stylesheet_tag }}
+{% comment %}
+  Renders the Hello World app block.
 
-<div class="hello-world-app-block" {{ block.shopify_attributes }}>
-  <div class="hello-world-content">
-    <h2>{{ block.settings.heading | default: "Hello World from Q-Blocks!" }}</h2>
-    <p>{{ block.settings.text | default: "This is a theme app extension block." }}</p>
-  </div>
+  Accepts:
+  - block: {Object} block object.
+  - block.settings: {Object} a block's settings.
+
+  Usage:
+  {% render 'app-block', block: block %}
+{% endcomment %}
+
+<div class="app-block app-block--hello-world" {{ block.shopify_attributes }}>
+  <h2 style="color: {{ block.settings.text_color }};">
+    {{ block.settings.heading }}
+  </h2>
+  <p>{{ block.settings.text }}</p>
 </div>
+
+<style>
+  .app-block--hello-world {
+    padding: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin: 1rem 0;
+    text-align: center;
+    background: #f9f9f9;
+  }
+  
+  .app-block--hello-world h2 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.5rem;
+  }
+  
+  .app-block--hello-world p {
+    margin: 0;
+    color: #666;
+  }
+</style>
 
 {% schema %}
 {
-  "name": "Hello World Block",
+  "name": "Hello World",
   "target": "section",
   "settings": [
     {
@@ -19,7 +49,7 @@
       "default": "Hello World from Q-Blocks!"
     },
     {
-      "type": "textarea",
+      "type": "text",
       "id": "text",
       "label": "Text",
       "default": "This is a theme app extension block."
