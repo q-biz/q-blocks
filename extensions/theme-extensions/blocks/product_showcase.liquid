@@ -190,13 +190,11 @@
   </div>
 </div>
 
-<!-- Three.js CDN and Advanced AI Libraries -->
+<!-- Three.js CDN and Working AI Libraries -->
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.15.0/dist/tf.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl@4.15.0/dist/tf-backend-webgl.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation@0.1.1675465747/selfie_segmentation.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/@tensorflow-models/depth-estimation@0.0.6/dist/depth-estimation.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/ml-matrix@6.10.4/lib-es6/index.js"></script>
+<script defer src="https://docs.opencv.org/4.8.0/opencv.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.20.0/dist/tf.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl@3.20.0/dist/tf-backend-webgl.min.js"></script>
 
 <script>
 // Global error handler for 3D debugging
@@ -335,9 +333,7 @@ function initializeModel{{ block.id | replace: '-', '_' }}() {
       this.dependencies = {
         threejs: false,
         tensorflow: false,
-        depthEstimation: false,
-        mediaPipe: false,
-        mlMatrix: false
+        opencv: false
       };
       
       console.log('🏗️ Product3DSystem initialized for block:', this.blockId);
@@ -408,17 +404,17 @@ function initializeModel{{ block.id | replace: '-', '_' }}() {
         console.warn('⚠️ TensorFlow.js not available:', error.message);
       }
       
-      // Check Depth Estimation (with timeout)
-      const depthTimeout = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('DepthEstimation loading timeout')), 3000)
+      // Check OpenCV (with timeout)
+      const cvTimeout = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('OpenCV loading timeout')), 5000)
       );
       
-      const depthCheck = new Promise((resolve) => {
-        if (typeof depthEstimation !== 'undefined') {
+      const cvCheck = new Promise((resolve) => {
+        if (typeof cv !== 'undefined') {
           resolve(true);
         } else {
           const interval = setInterval(() => {
-            if (typeof depthEstimation !== 'undefined') {
+            if (typeof cv !== 'undefined') {
               clearInterval(interval);
               resolve(true);
             }
@@ -427,27 +423,11 @@ function initializeModel{{ block.id | replace: '-', '_' }}() {
       });
       
       try {
-        await Promise.race([depthCheck, depthTimeout]);
-        this.dependencies.depthEstimation = true;
-        console.log('✅ DepthEstimation available');
+        await Promise.race([cvCheck, cvTimeout]);
+        this.dependencies.opencv = true;
+        console.log('✅ OpenCV.js available:', cv.getBuildInformation ? 'with build info' : 'basic');
       } catch (error) {
-        console.warn('⚠️ DepthEstimation not available:', error.message);
-      }
-      
-      // Check MediaPipe
-      if (typeof SelfieSegmentation !== 'undefined') {
-        this.dependencies.mediaPipe = true;
-        console.log('✅ MediaPipe available');
-      } else {
-        console.warn('⚠️ MediaPipe not available');
-      }
-      
-      // Check ML-Matrix
-      if (typeof MLMatrix !== 'undefined' || typeof window.MLMatrix !== 'undefined') {
-        this.dependencies.mlMatrix = true;
-        console.log('✅ ML-Matrix available');
-      } else {
-        console.warn('⚠️ ML-Matrix not available');
+        console.warn('⚠️ OpenCV.js not available:', error.message);
       }
       
       console.log('📊 Dependency status:', this.dependencies);
@@ -572,71 +552,36 @@ function initializeModel{{ block.id | replace: '-', '_' }}() {
     }
     
     async _generateDepthMap(imageDataUrl) {
-      console.log('🧠 Generating advanced AI depth map...');
+      console.log('🧠 Generating professional depth map...');
       
-      // Try multiple AI approaches in order of sophistication
-      if (this.dependencies.tensorflow && this.dependencies.depthEstimation) {
+      // Try proven computer vision approaches
+      if (this.dependencies.opencv) {
         try {
-          console.log('🤖 Attempting MiDaS depth estimation...');
-          const depthMap = await this._generateMiDaSDepth(imageDataUrl);
+          console.log('🎯 Using OpenCV computer vision depth...');
+          const depthMap = await this._generateOpenCVDepth(imageDataUrl);
           if (depthMap) return depthMap;
         } catch (error) {
-          console.warn('⚠️ MiDaS failed:', error.message);
-        }
-      }
-      
-      if (this.dependencies.mediaPipe) {
-        try {
-          console.log('🎯 Attempting MediaPipe segmentation-based depth...');
-          const depthMap = await this._generateSegmentationDepth(imageDataUrl);
-          if (depthMap) return depthMap;
-        } catch (error) {
-          console.warn('⚠️ MediaPipe failed:', error.message);
+          console.warn('⚠️ OpenCV failed:', error.message);
         }
       }
       
       if (this.dependencies.tensorflow) {
         try {
-          console.log('🔬 Attempting TensorFlow edge-based depth...');
-          const depthMap = await this._generateEdgeBasedDepth(imageDataUrl);
+          console.log('🔬 Using TensorFlow advanced depth...');
+          const depthMap = await this._generateTensorFlowDepth(imageDataUrl);
           if (depthMap) return depthMap;
         } catch (error) {
-          console.warn('⚠️ TensorFlow edge detection failed:', error.message);
+          console.warn('⚠️ TensorFlow failed:', error.message);
         }
       }
       
-      // Enhanced procedural depth as final fallback
-      console.log('🔧 Using enhanced procedural depth...');
-      return this._generateEnhancedProceduralDepth(imageDataUrl);
+      // Professional procedural depth
+      console.log('🎨 Using professional procedural depth...');
+      return this._generateProfessionalDepth(imageDataUrl);
     }
     
-    async _generateMiDaSDepth(imageDataUrl) {
-      console.log('🎯 MiDaS depth estimation...');
-      
-      try {
-        const model = await depthEstimation.createEstimator(
-          depthEstimation.SupportedModels.MiDaS
-        );
-        
-        const img = await this._createImageFromDataUrl(imageDataUrl);
-        const depthMap = await model.estimateDepth(img);
-        
-        console.log('✅ MiDaS depth complete:', {
-          width: depthMap.width,
-          height: depthMap.height,
-          range: [Math.min(...depthMap.data), Math.max(...depthMap.data)]
-        });
-        
-        return this._normalizeDepthMap(depthMap);
-        
-      } catch (error) {
-        console.warn('⚠️ MiDaS not available, trying alternative...');
-        throw error;
-      }
-    }
-    
-    async _generateSegmentationDepth(imageDataUrl) {
-      console.log('🎯 MediaPipe segmentation depth...');
+    async _generateOpenCVDepth(imageDataUrl) {
+      console.log('🎯 OpenCV computer vision depth...');
       
       const img = await this._createImageFromDataUrl(imageDataUrl);
       const canvas = document.createElement('canvas');
@@ -645,65 +590,34 @@ function initializeModel{{ block.id | replace: '-', '_' }}() {
       canvas.height = img.height;
       ctx.drawImage(img, 0, 0);
       
-      // Use segmentation to create depth layers
-      const segmentation = new SelfieSegmentation({
-        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`
-      });
+      // Use OpenCV for advanced computer vision
+      const src = cv.imread(canvas);
+      const gray = new cv.Mat();
+      const edges = new cv.Mat();
+      const depth = new cv.Mat();
       
-      return new Promise((resolve, reject) => {
-        segmentation.setOptions({
-          modelSelection: 1, // General model
-          selfieMode: false
-        });
-        
-        segmentation.onResults((results) => {
-          if (results.segmentationMask) {
-            const depthMap = this._convertSegmentationToDepth(results.segmentationMask, img);
-            console.log('✅ MediaPipe segmentation depth complete');
-            resolve(depthMap);
-          } else {
-            reject(new Error('No segmentation mask generated'));
-          }
-        });
-        
-        segmentation.send({image: img});
-      });
-    }
-    
-    async _generateEdgeBasedDepth(imageDataUrl) {
-      console.log('🔬 TensorFlow edge-based depth...');
+      // Convert to grayscale
+      cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
       
-      const img = await this._createImageFromDataUrl(imageDataUrl);
-      const tensor = tf.browser.fromPixels(img);
+      // Advanced edge detection
+      cv.Canny(gray, edges, 50, 150, 3, false);
       
-      // Sobel edge detection
-      const grayscale = tensor.mean(2);
-      const sobelX = tf.conv2d(
-        grayscale.expandDims(0).expandDims(-1),
-        tf.tensor4d([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]], [3, 3, 1, 1]),
-        1, 'same'
-      );
-      const sobelY = tf.conv2d(
-        grayscale.expandDims(0).expandDims(-1),
-        tf.tensor4d([[-1, -2, -1], [0, 0, 0], [1, 2, 1]], [3, 3, 1, 1]),
-        1, 'same'
-      );
+      // Distance transform for depth
+      cv.distanceTransform(edges, depth, cv.DIST_L2, cv.DIST_MASK_PRECISE);
       
-      // Combine edges for depth estimation
-      const magnitude = tf.sqrt(tf.add(tf.square(sobelX), tf.square(sobelY)));
-      const depthTensor = tf.sub(1, tf.div(magnitude, tf.max(magnitude)));
+      // Normalize and invert
+      cv.normalize(depth, depth, 0, 1, cv.NORM_MINMAX);
       
-      const depthData = await depthTensor.squeeze().data();
+      // Convert to depth data
+      const depthData = new Float32Array(depth.data64F);
       
-      // Cleanup tensors
-      tensor.dispose();
-      grayscale.dispose();
-      sobelX.dispose();
-      sobelY.dispose();
-      magnitude.dispose();
-      depthTensor.dispose();
+      // Cleanup
+      src.delete();
+      gray.delete(); 
+      edges.delete();
+      depth.delete();
       
-      console.log('✅ TensorFlow edge-based depth complete');
+      console.log('✅ OpenCV depth complete');
       
       return {
         data: depthData,
@@ -712,53 +626,78 @@ function initializeModel{{ block.id | replace: '-', '_' }}() {
       };
     }
     
-    _convertSegmentationToDepth(segmentationMask, originalImage) {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      canvas.width = originalImage.width;
-      canvas.height = originalImage.height;
+    async _generateTensorFlowDepth(imageDataUrl) {
+      console.log('🔬 TensorFlow advanced depth...');
       
-      ctx.putImageData(segmentationMask, 0, 0);
-      const maskData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const img = await this._createImageFromDataUrl(imageDataUrl);
+      const tensor = tf.browser.fromPixels(img);
       
-      // Convert segmentation to depth
-      const depthData = new Float32Array(canvas.width * canvas.height);
-      
-      for (let i = 0; i < maskData.data.length; i += 4) {
-        const pixelIndex = i / 4;
-        const confidence = maskData.data[i] / 255; // Use red channel as confidence
+      try {
+        // Multi-scale edge detection for depth
+        const grayscale = tensor.mean(2);
         
-        // Create depth based on segmentation confidence
-        depthData[pixelIndex] = confidence > 0.5 ? 0.8 : 0.2;
+        // Gaussian blur for noise reduction
+        const blurred = tf.conv2d(
+          grayscale.expandDims(0).expandDims(-1),
+          tf.tensor4d([[[[1/16]], [[2/16]], [[1/16]]], 
+                      [[[2/16]], [[4/16]], [[2/16]]], 
+                      [[[1/16]], [[2/16]], [[1/16]]]], [3, 3, 1, 1]),
+          1, 'same'
+        );
+        
+        // Sobel operators for gradient detection
+        const sobelX = tf.conv2d(blurred, 
+          tf.tensor4d([[[[-1]], [[0]], [[1]]], 
+                      [[[-2]], [[0]], [[2]]], 
+                      [[[-1]], [[0]], [[1]]]], [3, 3, 1, 1]), 1, 'same');
+        
+        const sobelY = tf.conv2d(blurred,
+          tf.tensor4d([[[[-1]], [[-2]], [[-1]]], 
+                      [[[0]], [[0]], [[0]]], 
+                      [[[1]], [[2]], [[1]]]], [3, 3, 1, 1]), 1, 'same');
+        
+        // Gradient magnitude
+        const magnitude = tf.sqrt(tf.add(tf.square(sobelX), tf.square(sobelY)));
+        
+        // Convert gradient to depth (invert so edges are valleys)
+        const normalized = tf.div(magnitude, tf.max(magnitude));
+        const inverted = tf.sub(1, normalized);
+        
+        // Apply Gaussian for smoothness
+        const smoothed = tf.conv2d(inverted,
+          tf.tensor4d([[[[1/9]], [[1/9]], [[1/9]]], 
+                      [[[1/9]], [[1/9]], [[1/9]]], 
+                      [[[1/9]], [[1/9]], [[1/9]]]], [3, 3, 1, 1]), 1, 'same');
+        
+        const depthData = await smoothed.squeeze().data();
+        
+        // Cleanup
+        tensor.dispose();
+        grayscale.dispose();
+        blurred.dispose();
+        sobelX.dispose();
+        sobelY.dispose();
+        magnitude.dispose();
+        normalized.dispose();
+        inverted.dispose();
+        smoothed.dispose();
+        
+        console.log('✅ TensorFlow advanced depth complete');
+        
+        return {
+          data: depthData,
+          width: img.width,
+          height: img.height
+        };
+        
+      } catch (error) {
+        tensor.dispose();
+        throw error;
       }
-      
-      return {
-        data: depthData,
-        width: canvas.width,
-        height: canvas.height
-      };
     }
     
-    _normalizeDepthMap(depthMap) {
-      const data = depthMap.data;
-      const min = Math.min(...data);
-      const max = Math.max(...data);
-      const range = max - min;
-      
-      const normalizedData = new Float32Array(data.length);
-      for (let i = 0; i < data.length; i++) {
-        normalizedData[i] = (data[i] - min) / range;
-      }
-      
-      return {
-        data: normalizedData,
-        width: depthMap.width,
-        height: depthMap.height
-      };
-    }
-    
-    async _generateEnhancedProceduralDepth(imageDataUrl) {
-      console.log('🔧 Generating enhanced procedural depth map...');
+    async _generateProfessionalDepth(imageDataUrl) {
+      console.log('🎨 Generating professional procedural depth...');
       
       const img = await this._createImageFromDataUrl(imageDataUrl);
       
