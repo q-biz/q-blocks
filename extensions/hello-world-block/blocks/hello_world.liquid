@@ -1,43 +1,20 @@
-{% comment %}
-  Q-Blocks Hello World App Block
-  Renders a customizable "Hello World" message
-{% endcomment %}
+{{ 'q-blocks-hello-world.css' | asset_url | stylesheet_tag }}
 
 <div class="q-blocks-hello-world" {{ block.shopify_attributes }}>
   <h2 
     style="
       color: {{ block.settings.text_color }};
       font-size: {{ block.settings.font_size }}px;
-      text-align: center;
-      margin: 20px 0;
-      font-family: 'Helvetica Neue', Arial, sans-serif;
     "
   >
-    {{ block.settings.message | default: 'Hello World from Q-Blocks!' }}
+    {{ block.settings.message }}
   </h2>
 </div>
 
-<style>
-  .q-blocks-hello-world {
-    padding: 20px;
-    border: 2px solid #e1e1e1;
-    border-radius: 8px;
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-    margin: 10px 0;
-    text-align: center;
-  }
-  
-  .q-blocks-hello-world:hover {
-    border-color: #007ace;
-    transition: border-color 0.3s ease;
-  }
-</style>
-
 {% schema %}
 {
-  "name": "Hello World",
+  "name": "Hello World Block",
   "target": "section",
-  "available_if": "{{ app.metafields.qblocks.enabled }}",
   "settings": [
     {
       "type": "text",
@@ -49,7 +26,7 @@
       "type": "color",
       "id": "text_color",
       "label": "Text Color",
-      "default": "#000000"
+      "default": "#007ace"
     },
     {
       "type": "range",
@@ -60,16 +37,6 @@
       "step": 2,
       "unit": "px",
       "default": 24
-    }
-  ],
-  "presets": [
-    {
-      "name": "Hello World",
-      "settings": {
-        "message": "Hello World from Q-Blocks!",
-        "text_color": "#007ace",
-        "font_size": 24
-      }
     }
   ]
 }
