@@ -315,36 +315,6 @@ function initializeModel{{ block.id | replace: '-', '_' }}() {
   scene.add(directionalLight);
   console.log('✅ Lighting setup complete');
   
-  // Create realistic 3D object with AI depth estimation
-  console.log('🖼️ Creating realistic 3D object from product image...');
-  const imageUrl = '{{ product.featured_image | image_url: width: 600 }}';
-  
-  // Initialize the 3D system with proper error handling
-  const system3D = new Product3DSystem({
-    blockId: '{{ block.id }}',
-    imageUrl: imageUrl,
-    settings: {
-      modelScale: {{ block.settings.model_scale | default: 1.5 }},
-      cameraDistance: {{ block.settings.camera_distance | default: 3 }},
-      cameraHeight: {{ block.settings.camera_height | default: 0 }},
-      bgRemovalSensitivity: {{ block.settings.bg_removal_sensitivity | default: 5 }}
-    },
-    scene: scene,
-    camera: camera,
-    loading: loading
-  });
-  
-  system3D.initialize()
-    .then(mesh => {
-      console.log('✅ 3D system initialized successfully');
-      window['model_{{ block.id | replace: "-", "_" }}'] = mesh;
-      animate();
-    })
-    .catch(error => {
-      console.error('❌ 3D system initialization failed:', error);
-      if (loading) loading.style.display = 'none';
-    });
-  
   /**
    * Professional 3D Product System
    * Engineered for reliability and maintainability
@@ -763,6 +733,35 @@ function initializeModel{{ block.id | replace: '-', '_' }}() {
     }
   }
   
+  // Create realistic 3D object with AI depth estimation
+  console.log('🖼️ Creating realistic 3D object from product image...');
+  const imageUrl = '{{ product.featured_image | image_url: width: 600 }}';
+  
+  // Initialize the 3D system with proper error handling
+  const system3D = new Product3DSystem({
+    blockId: '{{ block.id }}',
+    imageUrl: imageUrl,
+    settings: {
+      modelScale: {{ block.settings.model_scale | default: 1.5 }},
+      cameraDistance: {{ block.settings.camera_distance | default: 3 }},
+      cameraHeight: {{ block.settings.camera_height | default: 0 }},
+      bgRemovalSensitivity: {{ block.settings.bg_removal_sensitivity | default: 5 }}
+    },
+    scene: scene,
+    camera: camera,
+    loading: loading
+  });
+  
+  system3D.initialize()
+    .then(mesh => {
+      console.log('✅ 3D system initialized successfully');
+      window['model_{{ block.id | replace: "-", "_" }}'] = mesh;
+      animate();
+    })
+    .catch(error => {
+      console.error('❌ 3D system initialization failed:', error);
+      if (loading) loading.style.display = 'none';
+    });
   
   // Animation loop
   let animationStarted = false;
