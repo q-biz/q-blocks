@@ -160,6 +160,8 @@
               src="{{ product.featured_image | image_url: width: 600 }}" 
               alt="{{ product.featured_image.alt | default: product.title }}"
               class="product-image fallback-image"
+              width="600"
+              height="400"
               style="display: none;"
             />
           {% endif %}
@@ -169,6 +171,8 @@
           src="{{ product.featured_image | image_url: width: 600 }}" 
           alt="{{ product.featured_image.alt | default: product.title }}"
           class="product-image"
+          width="600"
+          height="400"
           loading="lazy"
         />
       {% else %}
@@ -199,8 +203,8 @@
 </div>
 
 <!-- Three.js CDN -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 
 <script>
 // Global error handler for 3D debugging
@@ -231,7 +235,7 @@ document.addEventListener('DOMContentLoaded', function() {
   console.log('📝 Model URL setting:', '{{ block.settings.model_url }}');
   console.log('📦 Block settings:', {
     model_url: '{{ block.settings.model_url }}',
-    rotation_speed: {{ block.settings.rotation_speed | default: 0.01 }},
+    rotation_speed: {{ block.settings.rotation_speed | default: 1 }},
     model_scale: {{ block.settings.model_scale | default: 1.5 }},
     camera_distance: {{ block.settings.camera_distance | default: 3 }},
     camera_height: {{ block.settings.camera_height | default: 0 }},
@@ -439,7 +443,7 @@ function initializeModel{{ block.id | replace: '-', '_' }}() {
     
     if (model) {
       // Continuous rotation
-      const rotationSpeed = {{ block.settings.rotation_speed | default: 0.01 }};
+      const rotationSpeed = {{ block.settings.rotation_speed | default: 1 }} * 0.01;
       model.rotation.y += rotationSpeed;
       
       // Optional: slight up-down bobbing
@@ -532,10 +536,10 @@ function initializeModel{{ block.id | replace: '-', '_' }}() {
       "id": "rotation_speed",
       "label": "Rotation Speed",
       "min": 0,
-      "max": 0.05,
-      "step": 0.005,
-      "default": 0.01,
-      "info": "How fast the model rotates (0 = no rotation)"
+      "max": 5,
+      "step": 1,
+      "default": 1,
+      "info": "How fast the model rotates (0 = no rotation, 5 = fastest)"
     },
     {
       "type": "range",
