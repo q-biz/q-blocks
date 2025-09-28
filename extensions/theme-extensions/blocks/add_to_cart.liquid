@@ -1,0 +1,611 @@
+{% comment %}
+  Modern Add to Cart Block
+  Features 3 stunning button designs with smooth animations
+{% endcomment %}
+
+<div class="add-to-cart-block" {{ block.shopify_attributes }}>
+  <style>
+    .add-to-cart-block {
+      padding: 2rem;
+      margin: 1rem 0;
+      max-width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.5rem;
+    }
+    
+    .product-info {
+      text-align: center;
+      max-width: 500px;
+    }
+    
+    .product-title {
+      font-size: {{ block.settings.title_size }}px;
+      font-weight: bold;
+      color: {{ block.settings.title_color }};
+      margin: 0 0 0.5rem 0;
+      line-height: 1.2;
+    }
+    
+    .product-price {
+      font-size: {{ block.settings.price_size }}px;
+      color: {{ block.settings.price_color }};
+      font-weight: 600;
+      margin: 0 0 1rem 0;
+    }
+    
+    .product-description {
+      font-size: {{ block.settings.description_size }}px;
+      color: {{ block.settings.description_color }};
+      line-height: 1.6;
+      margin: 0 0 2rem 0;
+    }
+    
+    /* Button Container */
+    .add-to-cart-container {
+      position: relative;
+      display: inline-block;
+    }
+    
+    /* Base Button Styles */
+    .add-to-cart-btn {
+      position: relative;
+      padding: {{ block.settings.button_padding_vertical }}px {{ block.settings.button_padding_horizontal }}px;
+      font-size: {{ block.settings.button_text_size }}px;
+      font-weight: 600;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow: hidden;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      min-width: 200px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      outline: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    .add-to-cart-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    
+    /* Button Type 1: Gradient Glow */
+    .btn-gradient-glow {
+      background: linear-gradient(135deg, {{ block.settings.button_color }}, {{ block.settings.button_color | color_darken: 20 }});
+      color: {{ block.settings.button_text_color }};
+      border-radius: {{ block.settings.button_border_radius }}px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      position: relative;
+    }
+    
+    .btn-gradient-glow::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, {{ block.settings.button_color | color_lighten: 10 }}, {{ block.settings.button_color | color_darken: 10 }});
+      border-radius: inherit;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    
+    .btn-gradient-glow:hover::before {
+      opacity: 1;
+    }
+    
+    .btn-gradient-glow:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    }
+    
+    .btn-gradient-glow:active {
+      transform: translateY(0);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+    
+    /* Button Type 2: Slide Fill */
+    .btn-slide-fill {
+      background: transparent;
+      color: {{ block.settings.button_color }};
+      border: 2px solid {{ block.settings.button_color }};
+      border-radius: {{ block.settings.button_border_radius }}px;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .btn-slide-fill::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 0;
+      height: 100%;
+      background: {{ block.settings.button_color }};
+      border-radius: calc({{ block.settings.button_border_radius }}px - 2px);
+      transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: -1;
+    }
+    
+    .btn-slide-fill:hover::before {
+      width: 100%;
+    }
+    
+    .btn-slide-fill:hover {
+      color: {{ block.settings.button_text_color }};
+      border-color: {{ block.settings.button_color }};
+    }
+    
+    /* Button Type 3: Ripple Effect */
+    .btn-ripple {
+      background: {{ block.settings.button_color }};
+      color: {{ block.settings.button_text_color }};
+      border-radius: {{ block.settings.button_border_radius }}px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .btn-ripple::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      transition: width 0.6s, height 0.6s;
+    }
+    
+    .btn-ripple:hover::before {
+      width: 300px;
+      height: 300px;
+    }
+    
+    .btn-ripple:hover {
+      transform: scale(1.05);
+    }
+    
+    /* Loading State */
+    .btn-loading {
+      pointer-events: none;
+    }
+    
+    .btn-loading .btn-text {
+      opacity: 0;
+    }
+    
+    .btn-loading .loading-spinner {
+      opacity: 1;
+    }
+    
+    .loading-spinner {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top: 2px solid currentColor;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    /* Success State */
+    .btn-success {
+      background: #10b981 !important;
+      color: white !important;
+    }
+    
+    .btn-success .btn-text::after {
+      content: ' ✓';
+    }
+    
+    /* Cart Icon */
+    .cart-icon {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+    }
+    
+    /* Quantity Selector */
+    .quantity-selector {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    .quantity-label {
+      font-weight: 600;
+      color: {{ block.settings.description_color }};
+    }
+    
+    .quantity-controls {
+      display: flex;
+      align-items: center;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    
+    .quantity-btn {
+      background: #f9fafb;
+      border: none;
+      padding: 8px 12px;
+      cursor: pointer;
+      font-weight: bold;
+      color: #374151;
+      transition: background-color 0.2s;
+    }
+    
+    .quantity-btn:hover {
+      background: #e5e7eb;
+    }
+    
+    .quantity-input {
+      border: none;
+      padding: 8px 12px;
+      width: 60px;
+      text-align: center;
+      font-weight: 600;
+      background: white;
+    }
+    
+    .quantity-input:focus {
+      outline: none;
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .add-to-cart-block {
+        padding: 1.5rem;
+      }
+      
+      .add-to-cart-btn {
+        min-width: 100%;
+        padding: 16px 24px;
+      }
+      
+      .quantity-selector {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+      }
+    }
+  </style>
+  
+  {% if block.settings.product != blank %}
+    {% assign product = all_products[block.settings.product] %}
+    
+    <div class="product-info">
+      {% if block.settings.show_title %}
+        <h2 class="product-title">{{ product.title }}</h2>
+      {% endif %}
+      
+      {% if block.settings.show_price %}
+        <div class="product-price">
+          {% if product.compare_at_price > product.price %}
+            <span style="text-decoration: line-through; opacity: 0.6;">{{ product.compare_at_price | money }}</span>
+            <span style="color: #dc2626; margin-left: 8px;">{{ product.price | money }}</span>
+          {% else %}
+            {{ product.price | money }}
+          {% endif %}
+        </div>
+      {% endif %}
+      
+      {% if block.settings.show_description and product.description != blank %}
+        <div class="product-description">
+          {{ product.description | strip_html | truncate: 150 }}
+        </div>
+      {% endif %}
+    </div>
+    
+    {% if product.available %}
+      <form action="/cart/add" method="post" enctype="multipart/form-data" class="add-to-cart-form">
+        {% if block.settings.show_quantity %}
+          <div class="quantity-selector">
+            <label class="quantity-label">Quantity:</label>
+            <div class="quantity-controls">
+              <button type="button" class="quantity-btn quantity-decrease">−</button>
+              <input type="number" name="quantity" value="1" min="1" class="quantity-input" id="quantity-{{ block.id }}">
+              <button type="button" class="quantity-btn quantity-increase">+</button>
+            </div>
+          </div>
+        {% else %}
+          <input type="hidden" name="quantity" value="1">
+        {% endif %}
+        
+        <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}">
+        
+        <div class="add-to-cart-container">
+          <button type="submit" class="add-to-cart-btn btn-{{ block.settings.button_style }}" id="add-to-cart-{{ block.id }}">
+            <svg class="cart-icon" viewBox="0 0 24 24">
+              <path d="M7 4V2C7 1.45 7.45 1 8 1H16C16.55 1 17 1.45 17 2V4H20C20.55 4 21 4.45 21 5S20.55 6 20 6H19V19C19 20.1 18.1 21 17 21H7C5.9 21 5 20.1 5 19V6H4C3.45 6 3 5.55 3 5S3.45 4 4 4H7ZM9 3V4H15V3H9ZM7 6V19H17V6H7Z"/>
+            </svg>
+            <span class="btn-text">{{ block.settings.button_text }}</span>
+            <div class="loading-spinner">
+              <div class="spinner"></div>
+            </div>
+          </button>
+        </div>
+      </form>
+    {% else %}
+      <div class="add-to-cart-container">
+        <button class="add-to-cart-btn btn-{{ block.settings.button_style }}" disabled>
+          <span class="btn-text">Sold Out</span>
+        </button>
+      </div>
+    {% endif %}
+  {% else %}
+    <div class="product-info">
+      <h2 class="product-title">Select a Product</h2>
+      <p class="product-description">Choose a product from the theme settings to display the Add to Cart button.</p>
+    </div>
+  {% endif %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const form = document.querySelector('.add-to-cart-form');
+  const button = document.getElementById('add-to-cart-{{ block.id }}');
+  const quantityInput = document.getElementById('quantity-{{ block.id }}');
+  const decreaseBtn = document.querySelector('.quantity-decrease');
+  const increaseBtn = document.querySelector('.quantity-increase');
+  
+  // Quantity controls
+  if (decreaseBtn && increaseBtn && quantityInput) {
+    decreaseBtn.addEventListener('click', function() {
+      const currentValue = parseInt(quantityInput.value);
+      if (currentValue > 1) {
+        quantityInput.value = currentValue - 1;
+      }
+    });
+    
+    increaseBtn.addEventListener('click', function() {
+      const currentValue = parseInt(quantityInput.value);
+      quantityInput.value = currentValue + 1;
+    });
+  }
+  
+  // Add to cart functionality
+  if (form && button) {
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      // Add loading state
+      button.classList.add('btn-loading');
+      
+      // Get form data
+      const formData = new FormData(form);
+      
+      // Add to cart via AJAX
+      fetch('/cart/add.js', {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        // Success state
+        button.classList.remove('btn-loading');
+        button.classList.add('btn-success');
+        
+        // Reset after 2 seconds
+        setTimeout(() => {
+          button.classList.remove('btn-success');
+        }, 2000);
+        
+        // Trigger cart update event
+        document.dispatchEvent(new CustomEvent('cart:updated', { detail: data }));
+        
+        console.log('✅ Product added to cart:', data);
+      })
+      .catch(error => {
+        // Error state
+        button.classList.remove('btn-loading');
+        console.error('❌ Error adding to cart:', error);
+        
+        // Show error message
+        alert('Sorry, there was an error adding this item to your cart. Please try again.');
+      });
+    });
+  }
+});
+</script>
+
+{% schema %}
+{
+  "name": "Add to Cart",
+  "target": "section",
+  "settings": [
+    {
+      "type": "product",
+      "id": "product",
+      "label": "Select Product"
+    },
+    {
+      "type": "header",
+      "content": "Button Design"
+    },
+    {
+      "type": "select",
+      "id": "button_style",
+      "label": "Button Style",
+      "options": [
+        {
+          "value": "gradient-glow",
+          "label": "Gradient Glow (Modern)"
+        },
+        {
+          "value": "slide-fill",
+          "label": "Slide Fill (Elegant)"
+        },
+        {
+          "value": "ripple",
+          "label": "Ripple Effect (Dynamic)"
+        }
+      ],
+      "default": "gradient-glow",
+      "info": "Choose from 3 beautifully designed button animations"
+    },
+    {
+      "type": "text",
+      "id": "button_text",
+      "label": "Button Text",
+      "default": "Add to Cart"
+    },
+    {
+      "type": "color",
+      "id": "button_color",
+      "label": "Button Color",
+      "default": "#3b82f6"
+    },
+    {
+      "type": "color",
+      "id": "button_text_color",
+      "label": "Button Text Color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "range",
+      "id": "button_text_size",
+      "label": "Button Text Size",
+      "min": 12,
+      "max": 24,
+      "step": 1,
+      "default": 16,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "button_border_radius",
+      "label": "Button Border Radius",
+      "min": 0,
+      "max": 50,
+      "step": 2,
+      "default": 8,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "button_padding_horizontal",
+      "label": "Button Horizontal Padding",
+      "min": 16,
+      "max": 48,
+      "step": 4,
+      "default": 32,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "button_padding_vertical",
+      "label": "Button Vertical Padding",
+      "min": 8,
+      "max": 24,
+      "step": 2,
+      "default": 16,
+      "unit": "px"
+    },
+    {
+      "type": "header",
+      "content": "Product Display"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_title",
+      "label": "Show Product Title",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_price",
+      "label": "Show Product Price",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_description",
+      "label": "Show Product Description",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_quantity",
+      "label": "Show Quantity Selector",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Typography"
+    },
+    {
+      "type": "range",
+      "id": "title_size",
+      "label": "Title Font Size",
+      "min": 18,
+      "max": 48,
+      "step": 2,
+      "default": 28,
+      "unit": "px"
+    },
+    {
+      "type": "color",
+      "id": "title_color",
+      "label": "Title Color",
+      "default": "#1f2937"
+    },
+    {
+      "type": "range",
+      "id": "price_size",
+      "label": "Price Font Size",
+      "min": 16,
+      "max": 32,
+      "step": 2,
+      "default": 24,
+      "unit": "px"
+    },
+    {
+      "type": "color",
+      "id": "price_color",
+      "label": "Price Color",
+      "default": "#059669"
+    },
+    {
+      "type": "range",
+      "id": "description_size",
+      "label": "Description Font Size",
+      "min": 12,
+      "max": 20,
+      "step": 1,
+      "default": 16,
+      "unit": "px"
+    },
+    {
+      "type": "color",
+      "id": "description_color",
+      "label": "Description Color",
+      "default": "#6b7280"
+    }
+  ]
+}
+{% endschema %}
