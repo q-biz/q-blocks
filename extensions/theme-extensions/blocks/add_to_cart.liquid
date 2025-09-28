@@ -53,64 +53,70 @@
       transform: none !important;
     }
     
-    /* 3D Button Style 1: Magnetic Hover */
-    .btn-magnetic {
+    /* 3D Button Style 1: Cyberpunk Matrix */
+    .btn-cyberpunk {
       background: {{ block.settings.button_color }};
-      color: white;
-      border-radius: 12px;
+      color: #00ff00;
+      border: none;
       position: relative;
       overflow: hidden;
       transform: translateZ(0);
-      transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+      transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
     }
     
-    .btn-magnetic::before {
+    .btn-cyberpunk::before {
       content: '';
       position: absolute;
       top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, 
-        transparent, 
-        rgba(255, 255, 255, 0.4), 
-        transparent);
-      transition: left 0.5s ease;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: 
+        linear-gradient(90deg, transparent 0%, #00ff0020 50%, transparent 100%),
+        repeating-linear-gradient(
+          90deg,
+          transparent,
+          transparent 2px,
+          #00ff0010 2px,
+          #00ff0010 4px
+        );
+      animation: matrixScan 2s linear infinite;
     }
     
-    .btn-magnetic::after {
+    @keyframes matrixScan {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+    
+    .btn-cyberpunk::after {
       content: '';
       position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 0;
-      height: 0;
-      background: radial-gradient(circle, 
-        rgba(255, 255, 255, 0.3), 
-        transparent 70%);
-      border-radius: 50%;
-      transform: translate(-50%, -50%);
-      transition: all 0.3s ease;
+      top: -2px;
+      left: -2px;
+      right: -2px;
+      bottom: -2px;
+      background: linear-gradient(45deg, #00ff00, transparent, #00ff00);
+      z-index: -1;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      clip-path: polygon(12px 0%, 100% 0%, calc(100% - 12px) 100%, 0% 100%);
     }
     
-    .btn-magnetic:hover {
-      transform: translateY(-8px) scale(1.02);
+    .btn-cyberpunk:hover {
+      transform: translateY(-4px);
       box-shadow: 
-        0 20px 40px rgba(0, 0, 0, 0.2),
-        0 0 0 1px rgba(255, 255, 255, 0.1);
+        0 0 20px #00ff0050,
+        0 8px 32px rgba(0, 0, 0, 0.3);
+      text-shadow: 0 0 10px #00ff00;
     }
     
-    .btn-magnetic:hover::before {
-      left: 100%;
+    .btn-cyberpunk:hover::after {
+      opacity: 1;
     }
     
-    .btn-magnetic:hover::after {
-      width: 100px;
-      height: 100px;
-    }
-    
-    .btn-magnetic:active {
-      transform: translateY(-4px) scale(0.98);
+    .btn-cyberpunk:active {
+      transform: translateY(-2px);
     }
     
     /* 3D Button Style 2: Beveled Edge */
@@ -280,77 +286,62 @@
       left: 100%;
     }
     
-    /* 3D Button Style 5: Particle Burst */
-    .btn-particle {
+    /* 3D Button Style 5: Origami Fold */
+    .btn-origami {
       background: {{ block.settings.button_color }};
       color: white;
-      border-radius: 14px;
+      border: none;
       position: relative;
       overflow: hidden;
       transform: translateZ(0);
+      clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px));
     }
     
-    .btn-particle::before {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 4px;
-      height: 4px;
-      background: rgba(255, 255, 255, 0.8);
-      border-radius: 50%;
-      transform: translate(-50%, -50%);
-      box-shadow: 
-        0 0 0 0 rgba(255, 255, 255, 0.8),
-        20px 10px 0 -2px rgba(255, 255, 255, 0.6),
-        -15px -20px 0 -1px rgba(255, 255, 255, 0.4),
-        25px -15px 0 -3px rgba(255, 255, 255, 0.5),
-        -20px 15px 0 -2px rgba(255, 255, 255, 0.7),
-        30px 5px 0 -4px rgba(255, 255, 255, 0.3);
-      opacity: 0;
-      transition: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-    }
-    
-    .btn-particle::after {
+    .btn-origami::before {
       content: '';
       position: absolute;
       top: 0;
-      left: 0;
       right: 0;
+      width: 20px;
+      height: 20px;
+      background: {{ block.settings.button_color | color_darken: 30 }};
+      clip-path: polygon(0 0, 100% 0, 0 100%);
+      transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+    
+    .btn-origami::after {
+      content: '';
+      position: absolute;
       bottom: 0;
-      background: radial-gradient(circle at center, 
-        transparent 30%, 
-        rgba(255, 255, 255, 0.1) 70%);
-      opacity: 0;
-      transform: scale(0);
-      transition: all 0.4s ease;
+      left: 0;
+      width: 20px;
+      height: 20px;
+      background: {{ block.settings.button_color | color_darken: 15 }};
+      clip-path: polygon(0 100%, 100% 100%, 100% 0);
+      transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     }
     
-    .btn-particle:hover {
-      transform: translateY(-6px) scale(1.03);
-      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
-    }
-    
-    .btn-particle:hover::before {
-      opacity: 1;
+    .btn-origami:hover {
+      transform: translateY(-6px) rotateX(5deg) rotateY(-2deg);
       box-shadow: 
-        0 0 0 0 rgba(255, 255, 255, 0.8),
-        40px 20px 0 -2px rgba(255, 255, 255, 0.6),
-        -30px -40px 0 -1px rgba(255, 255, 255, 0.4),
-        50px -30px 0 -3px rgba(255, 255, 255, 0.5),
-        -40px 30px 0 -2px rgba(255, 255, 255, 0.7),
-        60px 10px 0 -4px rgba(255, 255, 255, 0.3),
-        -25px -10px 0 -1px rgba(255, 255, 255, 0.6),
-        15px 35px 0 -2px rgba(255, 255, 255, 0.4);
+        0 20px 40px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
     }
     
-    .btn-particle:hover::after {
-      opacity: 1;
-      transform: scale(1);
+    .btn-origami:hover::before {
+      width: 30px;
+      height: 30px;
+      background: {{ block.settings.button_color | color_darken: 40 }};
     }
     
-    .btn-particle:active {
-      transform: translateY(-3px) scale(0.98);
+    .btn-origami:hover::after {
+      width: 30px;
+      height: 30px;
+      background: {{ block.settings.button_color | color_darken: 25 }};
+    }
+    
+    .btn-origami:active {
+      transform: translateY(-3px) rotateX(2deg) rotateY(-1deg);
     }
     
     /* Loading, Success & Error States */
@@ -800,8 +791,8 @@ document.addEventListener('DOMContentLoaded', function() {
       "label": "3D Button Style",
       "options": [
         {
-          "value": "magnetic",
-          "label": "🧲 Magnetic Hover"
+          "value": "cyberpunk",
+          "label": "🤖 Cyberpunk Matrix"
         },
         {
           "value": "bevel",
@@ -816,11 +807,11 @@ document.addEventListener('DOMContentLoaded', function() {
           "label": "🌈 Holographic Shimmer"
         },
         {
-          "value": "particle",
-          "label": "✨ Particle Burst"
+          "value": "origami",
+          "label": "📐 Origami Fold"
         }
       ],
-      "default": "magnetic",
+      "default": "cyberpunk",
       "info": "Choose from 5 stunning 3D button designs"
     },
     {
