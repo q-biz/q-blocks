@@ -1,191 +1,233 @@
 {% comment %}
-  Premium Add to Cart Button Block
-  Features 5 cutting-edge button designs inspired by top brands
-  Works with current product context - no product selection needed
+  Pure 3D Add to Cart Button Block
+  Features stunning 3D buttons with CSS pseudo-classes and animations
+  Works with current product context - minimal customization
 {% endcomment %}
 
-<div class="atc-button-block" {{ block.shopify_attributes }}>
+<div class="atc-3d-block" {{ block.shopify_attributes }}>
   <style>
-    .atc-button-block {
-      padding: {{ block.settings.block_padding }}px;
-      margin: {{ block.settings.block_margin }}px 0;
+    .atc-3d-block {
+      padding: 20px;
+      margin: 16px 0;
       display: flex;
-      justify-content: {{ block.settings.button_alignment }};
+      justify-content: center;
       align-items: center;
+      perspective: 1000px;
     }
     
     /* Button Container */
     .atc-container {
       position: relative;
       display: inline-block;
+      transform-style: preserve-3d;
     }
     
-    /* Base Button Styles */
-    .atc-btn {
+    /* Base 3D Button */
+    .atc-3d-btn {
       position: relative;
-      padding: {{ block.settings.button_padding_vertical }}px {{ block.settings.button_padding_horizontal }}px;
-      font-size: {{ block.settings.button_text_size }}px;
-      font-weight: {{ block.settings.button_font_weight }};
-      font-family: {{ block.settings.button_font_family }};
+      padding: 18px 36px;
+      font-size: 16px;
+      font-weight: 700;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       text-decoration: none;
       border: none;
       cursor: pointer;
-      overflow: hidden;
-      text-transform: {{ block.settings.button_text_transform }};
-      letter-spacing: {{ block.settings.button_letter_spacing }}px;
-      min-width: {{ block.settings.button_min_width }}px;
+      overflow: visible;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      min-width: 220px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 10px;
+      gap: 12px;
       outline: none;
       user-select: none;
       -webkit-tap-highlight-color: transparent;
-      transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-      backdrop-filter: blur(10px);
+      transform-style: preserve-3d;
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
     
-    .atc-btn:disabled {
-      opacity: 0.5;
+    .atc-3d-btn:disabled {
+      opacity: 0.6;
       cursor: not-allowed;
       transform: none !important;
     }
     
-    /* Button Style 1: Apple-Inspired Glassmorphism */
-    .btn-apple {
-      background: rgba({{ block.settings.button_color | color_to_rgb | remove: 'rgb(' | remove: ')' }}, 0.8);
-      color: {{ block.settings.button_text_color }};
-      border-radius: {{ block.settings.button_border_radius }}px;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      backdrop-filter: blur(20px);
-      box-shadow: 
-        0 8px 32px rgba(0, 0, 0, 0.1),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2);
-      position: relative;
-    }
-    
-    .btn-apple::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: linear-gradient(135deg, 
-        rgba(255, 255, 255, 0.1) 0%, 
-        rgba(255, 255, 255, 0) 50%);
-      border-radius: inherit;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    }
-    
-    .btn-apple:hover {
-      transform: translateY(-1px) scale(1.02);
-      box-shadow: 
-        0 12px 40px rgba(0, 0, 0, 0.15),
-        inset 0 1px 0 rgba(255, 255, 255, 0.3);
-    }
-    
-    .btn-apple:hover::before {
-      opacity: 1;
-    }
-    
-    .btn-apple:active {
-      transform: translateY(0) scale(0.98);
-    }
-    
-    /* Button Style 2: Stripe-Inspired Gradient Shift */
-    .btn-stripe {
-      background: linear-gradient(45deg, 
-        {{ block.settings.button_color }}, 
-        {{ block.settings.button_color | color_lighten: 15 }}, 
-        {{ block.settings.button_color | color_darken: 10 }});
-      background-size: 300% 300%;
-      color: {{ block.settings.button_text_color }};
-      border-radius: {{ block.settings.button_border_radius }}px;
-      box-shadow: 0 4px 20px rgba({{ block.settings.button_color | color_to_rgb | remove: 'rgb(' | remove: ')' }}, 0.3);
-      position: relative;
-      animation: gradientShift 3s ease infinite;
-    }
-    
-    @keyframes gradientShift {
-      0%, 100% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-    }
-    
-    .btn-stripe::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, 
-        transparent, 
-        rgba(255, 255, 255, 0.3), 
-        transparent);
-      transition: left 0.6s;
-    }
-    
-    .btn-stripe:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 30px rgba({{ block.settings.button_color | color_to_rgb | remove: 'rgb(' | remove: ')' }}, 0.4);
-    }
-    
-    .btn-stripe:hover::after {
-      left: 100%;
-    }
-    
-    /* Button Style 3: Nike-Inspired Morphing */
-    .btn-nike {
+    /* 3D Button Style 1: Extruded Cube */
+    .btn-cube {
       background: {{ block.settings.button_color }};
-      color: {{ block.settings.button_text_color }};
-      border-radius: {{ block.settings.button_border_radius }}px;
+      color: white;
+      border-radius: 8px;
       position: relative;
-      overflow: hidden;
-      transform-style: preserve-3d;
+      transform: translateZ(0);
     }
     
-    .btn-nike::before {
+    .btn-cube::before {
       content: '';
       position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: linear-gradient(45deg, 
-        transparent 30%, 
-        rgba(255, 255, 255, 0.2) 50%, 
-        transparent 70%);
-      transform: translateX(-100%) skewX(-15deg);
-      transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      top: -6px;
+      left: 6px;
+      right: -6px;
+      bottom: 6px;
+      background: {{ block.settings.button_color | color_darken: 25 }};
+      border-radius: 8px;
+      z-index: -1;
+      transform: translateZ(-6px);
+      transition: all 0.3s ease;
     }
     
-    .btn-nike:hover {
-      transform: perspective(1000px) rotateX(-5deg) translateY(-2px);
+    .btn-cube::after {
+      content: '';
+      position: absolute;
+      top: 6px;
+      left: -6px;
+      right: 6px;
+      bottom: -6px;
+      background: {{ block.settings.button_color | color_darken: 15 }};
+      border-radius: 8px;
+      z-index: -2;
+      transform: translateZ(-3px);
+      transition: all 0.3s ease;
+    }
+    
+    .btn-cube:hover {
+      transform: translateZ(3px) translateY(-3px);
+    }
+    
+    .btn-cube:hover::before {
+      transform: translateZ(-9px);
+      top: -9px;
+      left: 9px;
+    }
+    
+    .btn-cube:active {
+      transform: translateZ(0) translateY(0);
+    }
+    
+    /* 3D Button Style 2: Beveled Edge */
+    .btn-bevel {
+      background: linear-gradient(145deg, 
+        {{ block.settings.button_color | color_lighten: 10 }}, 
+        {{ block.settings.button_color }}, 
+        {{ block.settings.button_color | color_darken: 15 }});
+      color: white;
+      border-radius: 12px;
+      position: relative;
       box-shadow: 
-        0 10px 25px rgba(0, 0, 0, 0.2),
-        0 0 0 1px rgba(255, 255, 255, 0.1);
+        inset 2px 2px 5px {{ block.settings.button_color | color_lighten: 20 }},
+        inset -2px -2px 5px {{ block.settings.button_color | color_darken: 20 }},
+        5px 5px 15px rgba(0,0,0,0.3);
     }
     
-    .btn-nike:hover::before {
-      transform: translateX(100%) skewX(-15deg);
+    .btn-bevel::before {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      right: 2px;
+      bottom: 2px;
+      background: linear-gradient(145deg, 
+        transparent, 
+        rgba(255,255,255,0.1), 
+        transparent);
+      border-radius: 10px;
+      transition: all 0.3s ease;
     }
     
-    /* Button Style 4: Tesla-Inspired Neon Glow */
-    .btn-tesla {
+    .btn-bevel:hover {
+      box-shadow: 
+        inset 3px 3px 8px {{ block.settings.button_color | color_lighten: 25 }},
+        inset -3px -3px 8px {{ block.settings.button_color | color_darken: 25 }},
+        8px 8px 20px rgba(0,0,0,0.4);
+      transform: translateY(-2px);
+    }
+    
+    .btn-bevel:active {
+      box-shadow: 
+        inset 5px 5px 10px {{ block.settings.button_color | color_darken: 20 }},
+        inset -2px -2px 5px {{ block.settings.button_color | color_lighten: 15 }};
+      transform: translateY(1px);
+    }
+    
+    /* 3D Button Style 3: Floating Orb */
+    .btn-orb {
+      background: radial-gradient(ellipse at top left, 
+        {{ block.settings.button_color | color_lighten: 20 }}, 
+        {{ block.settings.button_color }}, 
+        {{ block.settings.button_color | color_darken: 20 }});
+      color: white;
+      border-radius: 50px;
+      position: relative;
+      box-shadow: 
+        0 8px 16px rgba(0,0,0,0.3),
+        inset 0 1px 0 rgba(255,255,255,0.3),
+        inset 0 -1px 0 rgba(0,0,0,0.2);
+      transform: translateZ(0);
+    }
+    
+    .btn-orb::before {
+      content: '';
+      position: absolute;
+      top: 15%;
+      left: 20%;
+      width: 30%;
+      height: 30%;
+      background: radial-gradient(ellipse, 
+        rgba(255,255,255,0.6), 
+        rgba(255,255,255,0.2), 
+        transparent);
+      border-radius: 50%;
+      transform: rotate(-45deg);
+      transition: all 0.3s ease;
+    }
+    
+    .btn-orb:hover {
+      transform: translateZ(5px) translateY(-5px) scale(1.05);
+      box-shadow: 
+        0 15px 30px rgba(0,0,0,0.4),
+        inset 0 2px 0 rgba(255,255,255,0.4),
+        inset 0 -2px 0 rgba(0,0,0,0.3);
+    }
+    
+    .btn-orb:hover::before {
+      top: 10%;
+      left: 15%;
+      width: 40%;
+      height: 40%;
+    }
+    
+    .btn-orb:active {
+      transform: translateZ(2px) translateY(-2px) scale(0.98);
+    }
+    
+    /* 3D Button Style 4: Neon Tube */
+    .btn-neon {
       background: transparent;
       color: {{ block.settings.button_color }};
-      border: 2px solid {{ block.settings.button_color }};
-      border-radius: {{ block.settings.button_border_radius }}px;
+      border: 3px solid {{ block.settings.button_color }};
+      border-radius: 25px;
       position: relative;
       text-shadow: 0 0 10px currentColor;
       box-shadow: 
-        inset 0 0 20px rgba({{ block.settings.button_color | color_to_rgb | remove: 'rgb(' | remove: ')' }}, 0.1),
-        0 0 20px rgba({{ block.settings.button_color | color_to_rgb | remove: 'rgb(' | remove: ')' }}, 0.2);
+        0 0 20px {{ block.settings.button_color }}40,
+        inset 0 0 20px {{ block.settings.button_color }}20;
     }
     
-    .btn-tesla::before {
+    .btn-neon::before {
+      content: '';
+      position: absolute;
+      top: -6px;
+      left: -6px;
+      right: -6px;
+      bottom: -6px;
+      border: 2px solid {{ block.settings.button_color }};
+      border-radius: 31px;
+      opacity: 0.5;
+      box-shadow: 0 0 30px {{ block.settings.button_color }}60;
+      transition: all 0.3s ease;
+    }
+    
+    .btn-neon::after {
       content: '';
       position: absolute;
       top: 0;
@@ -193,54 +235,54 @@
       right: 0;
       bottom: 0;
       background: {{ block.settings.button_color }};
-      border-radius: calc({{ block.settings.button_border_radius }}px - 2px);
+      border-radius: 22px;
       opacity: 0;
-      transition: opacity 0.3s ease;
+      transition: all 0.3s ease;
     }
     
-    .btn-tesla::after {
-      content: '';
-      position: absolute;
-      top: -2px;
-      left: -2px;
-      right: -2px;
-      bottom: -2px;
-      background: linear-gradient(45deg, 
-        {{ block.settings.button_color }}, 
-        transparent, 
-        {{ block.settings.button_color }});
-      border-radius: {{ block.settings.button_border_radius }}px;
-      z-index: -1;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    }
-    
-    .btn-tesla:hover {
-      color: {{ block.settings.button_text_color }};
+    .btn-neon:hover {
+      color: white;
       text-shadow: none;
       box-shadow: 
-        inset 0 0 30px rgba({{ block.settings.button_color | color_to_rgb | remove: 'rgb(' | remove: ')' }}, 0.3),
-        0 0 30px rgba({{ block.settings.button_color | color_to_rgb | remove: 'rgb(' | remove: ')' }}, 0.5);
+        0 0 40px {{ block.settings.button_color }}80,
+        inset 0 0 30px {{ block.settings.button_color }}40;
     }
     
-    .btn-tesla:hover::before {
+    .btn-neon:hover::before {
+      box-shadow: 0 0 50px {{ block.settings.button_color }}80;
+      opacity: 0.8;
+    }
+    
+    .btn-neon:hover::after {
       opacity: 1;
     }
     
-    .btn-tesla:hover::after {
-      opacity: 1;
-    }
-    
-    /* Button Style 5: Shopify-Inspired Liquid Morph */
-    .btn-shopify {
+    /* 3D Button Style 5: Morphing Liquid */
+    .btn-liquid {
       background: {{ block.settings.button_color }};
-      color: {{ block.settings.button_text_color }};
-      border-radius: {{ block.settings.button_border_radius }}px;
+      color: white;
+      border-radius: 20px;
       position: relative;
       overflow: hidden;
+      transform: translateZ(0);
     }
     
-    .btn-shopify::before {
+    .btn-liquid::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: radial-gradient(circle at 30% 30%, 
+        {{ block.settings.button_color | color_lighten: 15 }}, 
+        transparent 50%);
+      border-radius: 20px;
+      transform: scale(0);
+      transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+    
+    .btn-liquid::after {
       content: '';
       position: absolute;
       top: 50%;
@@ -248,26 +290,33 @@
       width: 0;
       height: 0;
       background: radial-gradient(circle, 
-        rgba(255, 255, 255, 0.3) 0%, 
-        rgba(255, 255, 255, 0.1) 50%, 
-        transparent 100%);
+        rgba(255,255,255,0.3), 
+        rgba(255,255,255,0.1), 
+        transparent);
       border-radius: 50%;
       transform: translate(-50%, -50%);
-      transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     }
     
-    .btn-shopify:hover {
-      transform: scale(1.05);
-      box-shadow: 0 8px 25px rgba({{ block.settings.button_color | color_to_rgb | remove: 'rgb(' | remove: ')' }}, 0.4);
+    .btn-liquid:hover {
+      border-radius: 30px;
+      transform: translateZ(3px) scale(1.05);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
     }
     
-    .btn-shopify:hover::before {
-      width: 300px;
-      height: 300px;
+    .btn-liquid:hover::before {
+      transform: scale(1.5);
+      border-radius: 30px;
     }
     
-    .btn-shopify:active {
-      transform: scale(0.95);
+    .btn-liquid:hover::after {
+      width: 200px;
+      height: 200px;
+    }
+    
+    .btn-liquid:active {
+      transform: translateZ(1px) scale(0.95);
+      border-radius: 15px;
     }
     
     /* Loading, Success & Error States */
@@ -540,25 +589,15 @@
   {% if product and product != empty %}
     {% if product.available %}
       <form action="/cart/add" method="post" enctype="multipart/form-data" class="atc-form" data-product-id="{{ product.id }}">
-        {% if block.settings.show_quantity %}
-          <div class="quantity-selector">
-            <button type="button" class="qty-btn qty-decrease" aria-label="Decrease quantity">−</button>
-            <input type="number" name="quantity" value="1" min="1" max="{{ product.selected_or_first_available_variant.inventory_quantity | default: 999 }}" class="qty-input" id="qty-{{ block.id }}" aria-label="Quantity">
-            <button type="button" class="qty-btn qty-increase" aria-label="Increase quantity">+</button>
-          </div>
-        {% else %}
-          <input type="hidden" name="quantity" value="1">
-        {% endif %}
+        <input type="hidden" name="quantity" value="1">
         
         <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}" class="variant-id">
         
         <div class="atc-container">
-          <button type="submit" class="atc-btn btn-{{ block.settings.button_style }}" id="atc-{{ block.id }}" aria-label="Add {{ product.title }} to cart">
-            {% if block.settings.show_icon %}
-              <svg class="cart-icon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-                <path d="M7 18c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12L8.1 13h7.45c.75 0 1.41-.41 1.75-1.03L21.7 4H5.21l-.94-2H1zm16 16c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
-              </svg>
-            {% endif %}
+          <button type="submit" class="atc-3d-btn btn-{{ block.settings.button_style }}" id="atc-{{ block.id }}" aria-label="Add {{ product.title }} to cart">
+            <svg class="cart-icon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+              <path d="M7 18c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12L8.1 13h7.45c.75 0 1.41-.41 1.75-1.03L21.7 4H5.21l-.94-2H1zm16 16c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+            </svg>
             <span class="btn-text">{{ block.settings.button_text }}</span>
             <div class="loading-spinner">
               <div class="spinner"></div>
@@ -573,8 +612,8 @@
       </form>
     {% else %}
       <div class="atc-container">
-        <button class="atc-btn btn-{{ block.settings.button_style }}" disabled aria-label="Product sold out">
-          <span class="btn-text">{{ block.settings.sold_out_text }}</span>
+        <button class="atc-3d-btn btn-{{ block.settings.button_style }}" disabled aria-label="Product sold out">
+          <span class="btn-text">Sold Out</span>
         </button>
       </div>
     {% endif %}
@@ -591,41 +630,6 @@
 document.addEventListener('DOMContentLoaded', function() {
   const form = document.querySelector('.atc-form');
   const button = document.getElementById('atc-{{ block.id }}');
-  const quantityInput = document.getElementById('qty-{{ block.id }}');
-  const decreaseBtn = document.querySelector('.qty-decrease');
-  const increaseBtn = document.querySelector('.qty-increase');
-  
-  // Enhanced quantity controls with haptic feedback
-  if (decreaseBtn && increaseBtn && quantityInput) {
-    decreaseBtn.addEventListener('click', function() {
-      const currentValue = parseInt(quantityInput.value);
-      if (currentValue > 1) {
-        quantityInput.value = currentValue - 1;
-        // Haptic feedback for mobile
-        if (navigator.vibrate) navigator.vibrate(10);
-      }
-    });
-    
-    increaseBtn.addEventListener('click', function() {
-      const currentValue = parseInt(quantityInput.value);
-      const maxValue = parseInt(quantityInput.max);
-      if (currentValue < maxValue) {
-        quantityInput.value = currentValue + 1;
-        // Haptic feedback for mobile
-        if (navigator.vibrate) navigator.vibrate(10);
-      }
-    });
-    
-    // Validate quantity input
-    quantityInput.addEventListener('input', function() {
-      const value = parseInt(this.value);
-      const min = parseInt(this.min);
-      const max = parseInt(this.max);
-      
-      if (value < min) this.value = min;
-      if (value > max) this.value = max;
-    });
-  }
   
   // Advanced Add to Cart functionality
   if (form && button) {
@@ -753,41 +757,37 @@ document.addEventListener('DOMContentLoaded', function() {
 
 {% schema %}
 {
-  "name": "Add to Cart Button",
+  "name": "3D Add to Cart Button",
   "target": "section",
   "settings": [
     {
-      "type": "header",
-      "content": "Button Style"
-    },
-    {
       "type": "select",
       "id": "button_style",
-      "label": "Button Design",
+      "label": "3D Button Style",
       "options": [
         {
-          "value": "apple",
-          "label": "🍎 Apple Glassmorphism"
+          "value": "cube",
+          "label": "🎲 Extruded Cube"
         },
         {
-          "value": "stripe",
-          "label": "💳 Stripe Gradient Shift"
+          "value": "bevel",
+          "label": "💎 Beveled Edge"
         },
         {
-          "value": "nike",
-          "label": "👟 Nike Morphing"
+          "value": "orb",
+          "label": "🔮 Floating Orb"
         },
         {
-          "value": "tesla",
-          "label": "⚡ Tesla Neon Glow"
+          "value": "neon",
+          "label": "⚡ Neon Tube"
         },
         {
-          "value": "shopify",
-          "label": "🛍️ Shopify Liquid Morph"
+          "value": "liquid",
+          "label": "💧 Morphing Liquid"
         }
       ],
-      "default": "apple",
-      "info": "Choose from 5 cutting-edge button designs inspired by top brands"
+      "default": "cube",
+      "info": "Choose from 5 stunning 3D button designs"
     },
     {
       "type": "text",
@@ -796,174 +796,10 @@ document.addEventListener('DOMContentLoaded', function() {
       "default": "Add to Cart"
     },
     {
-      "type": "text",
-      "id": "sold_out_text",
-      "label": "Sold Out Text",
-      "default": "Sold Out"
-    },
-    {
       "type": "color",
       "id": "button_color",
-      "label": "Primary Color",
+      "label": "Button Color",
       "default": "#007aff"
-    },
-    {
-      "type": "color",
-      "id": "button_text_color",
-      "label": "Text Color",
-      "default": "#ffffff"
-    },
-    {
-      "type": "header",
-      "content": "Button Typography"
-    },
-    {
-      "type": "range",
-      "id": "button_text_size",
-      "label": "Text Size",
-      "min": 12,
-      "max": 28,
-      "step": 1,
-      "default": 16,
-      "unit": "px"
-    },
-    {
-      "type": "select",
-      "id": "button_font_weight",
-      "label": "Font Weight",
-      "options": [
-        { "value": "400", "label": "Normal" },
-        { "value": "500", "label": "Medium" },
-        { "value": "600", "label": "Semi Bold" },
-        { "value": "700", "label": "Bold" }
-      ],
-      "default": "600"
-    },
-    {
-      "type": "select",
-      "id": "button_font_family",
-      "label": "Font Family",
-      "options": [
-        { "value": "inherit", "label": "Theme Default" },
-        { "value": "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", "label": "System Font" },
-        { "value": "'Inter', sans-serif", "label": "Inter" },
-        { "value": "'Poppins', sans-serif", "label": "Poppins" }
-      ],
-      "default": "inherit"
-    },
-    {
-      "type": "select",
-      "id": "button_text_transform",
-      "label": "Text Transform",
-      "options": [
-        { "value": "none", "label": "None" },
-        { "value": "uppercase", "label": "UPPERCASE" },
-        { "value": "lowercase", "label": "lowercase" },
-        { "value": "capitalize", "label": "Capitalize" }
-      ],
-      "default": "uppercase"
-    },
-    {
-      "type": "range",
-      "id": "button_letter_spacing",
-      "label": "Letter Spacing",
-      "min": -1,
-      "max": 3,
-      "step": 0.1,
-      "default": 0.5,
-      "unit": "px"
-    },
-    {
-      "type": "header",
-      "content": "Button Size & Shape"
-    },
-    {
-      "type": "range",
-      "id": "button_min_width",
-      "label": "Minimum Width",
-      "min": 120,
-      "max": 400,
-      "step": 10,
-      "default": 200,
-      "unit": "px"
-    },
-    {
-      "type": "range",
-      "id": "button_padding_horizontal",
-      "label": "Horizontal Padding",
-      "min": 16,
-      "max": 60,
-      "step": 4,
-      "default": 32,
-      "unit": "px"
-    },
-    {
-      "type": "range",
-      "id": "button_padding_vertical",
-      "label": "Vertical Padding",
-      "min": 8,
-      "max": 32,
-      "step": 2,
-      "default": 16,
-      "unit": "px"
-    },
-    {
-      "type": "range",
-      "id": "button_border_radius",
-      "label": "Border Radius",
-      "min": 0,
-      "max": 50,
-      "step": 2,
-      "default": 12,
-      "unit": "px"
-    },
-    {
-      "type": "header",
-      "content": "Layout & Features"
-    },
-    {
-      "type": "select",
-      "id": "button_alignment",
-      "label": "Button Alignment",
-      "options": [
-        { "value": "flex-start", "label": "Left" },
-        { "value": "center", "label": "Center" },
-        { "value": "flex-end", "label": "Right" }
-      ],
-      "default": "center"
-    },
-    {
-      "type": "range",
-      "id": "block_padding",
-      "label": "Block Padding",
-      "min": 0,
-      "max": 60,
-      "step": 4,
-      "default": 20,
-      "unit": "px"
-    },
-    {
-      "type": "range",
-      "id": "block_margin",
-      "label": "Block Margin",
-      "min": 0,
-      "max": 40,
-      "step": 4,
-      "default": 16,
-      "unit": "px"
-    },
-    {
-      "type": "checkbox",
-      "id": "show_icon",
-      "label": "Show Cart Icon",
-      "default": true
-    },
-    {
-      "type": "checkbox",
-      "id": "show_quantity",
-      "label": "Show Quantity Selector",
-      "default": false,
-      "info": "Display +/- quantity controls above the button"
     }
   ]
 }
