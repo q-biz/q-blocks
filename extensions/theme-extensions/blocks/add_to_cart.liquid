@@ -57,14 +57,14 @@
       /* Height Logic */
       {% case block.settings.button_height %}
         {% when 'small' %}
-          padding: 12px 24px;
-          font-size: 14px;
+          padding: 10px 20px;
+          font-size: 13px;
         {% when 'big' %}
-          padding: 24px 48px;
-          font-size: 18px;
-        {% else %}
           padding: 18px 36px;
           font-size: 16px;
+        {% else %}
+          padding: 12px 24px;
+          font-size: 14px;
       {% endcase %}
     }
     
@@ -93,14 +93,14 @@
       /* Height-specific adjustments for skewed button */
       {% case block.settings.button_height %}
         {% when 'small' %}
-          padding: 8px 35px;
-          font-size: 16px;
+          padding: 6px 30px;
+          font-size: 15px;
         {% when 'big' %}
-          padding: 14px 55px;
-          font-size: 20px;
-        {% else %}
           padding: 10px 45px;
           font-size: 18px;
+        {% else %}
+          padding: 8px 35px;
+          font-size: 16px;
       {% endcase %}
     }
 
@@ -356,14 +356,14 @@
       /* Height-specific adjustments for animated border button */
       {% case block.settings.button_height %}
         {% when 'small' %}
-          padding: 16px 32px;
-          font-size: 14px;
+          padding: 14px 28px;
+          font-size: 13px;
         {% when 'big' %}
-          padding: 24px 48px;
-          font-size: 18px;
-        {% else %}
           padding: 20px 40px;
           font-size: 16px;
+        {% else %}
+          padding: 16px 32px;
+          font-size: 14px;
       {% endcase %}
     }
 
