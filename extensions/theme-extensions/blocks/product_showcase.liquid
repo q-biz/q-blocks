@@ -190,12 +190,89 @@
   </div>
 </div>
 
-<!-- Modern 3D Libraries for High-Quality Product Visualization -->
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r160/three.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.15.0/dist/tf.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl@4.15.0/dist/tf-backend-webgl.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation@0.1.1675465747/selfie_segmentation.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/@tensorflow-models/depth-estimation@0.0.6/dist/depth-estimation.min.js"></script>
+<!-- Modern 3D Libraries with Fallback Loading Strategy -->
+<script>
+// Dynamic library loader with fallbacks
+window.Q3DLibraryLoader = {
+  libraries: {
+    threejs: {
+      urls: [
+        'https://cdnjs.cloudflare.com/ajax/libs/three.js/r160/three.min.js',
+        'https://unpkg.com/three@0.160.0/build/three.min.js',
+        'https://cdn.skypack.dev/three@0.160.0'
+      ],
+      test: () => typeof THREE !== 'undefined'
+    },
+    tensorflow: {
+      urls: [
+        'https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.15.0/dist/tf.min.js',
+        'https://unpkg.com/@tensorflow/tfjs@4.15.0/dist/tf.min.js'
+      ],
+      test: () => typeof tf !== 'undefined'
+    }
+  },
+  
+  async loadLibrary(name) {
+    const lib = this.libraries[name];
+    if (!lib) throw new Error(`Library ${name} not configured`);
+    
+    // Check if already loaded
+    if (lib.test()) {
+      console.log(`✅ ${name} already loaded`);
+      return true;
+    }
+    
+    console.log(`📦 Loading ${name}...`);
+    
+    for (const url of lib.urls) {
+      try {
+        await this.loadScript(url);
+        if (lib.test()) {
+          console.log(`✅ ${name} loaded from ${url}`);
+          return true;
+        }
+      } catch (error) {
+        console.warn(`⚠️ Failed to load ${name} from ${url}:`, error.message);
+      }
+    }
+    
+    throw new Error(`❌ Failed to load ${name} from all sources`);
+  },
+  
+  loadScript(url) {
+    return new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = url;
+      script.onload = resolve;
+      script.onerror = () => reject(new Error(`Failed to load ${url}`));
+      document.head.appendChild(script);
+      
+      // Timeout after 10 seconds
+      setTimeout(() => reject(new Error(`Timeout loading ${url}`)), 10000);
+    });
+  },
+  
+  async loadAll() {
+    try {
+      // Load Three.js first (required)
+      await this.loadLibrary('threejs');
+      
+      // Load TensorFlow.js (optional for AI features)
+      try {
+        await this.loadLibrary('tensorflow');
+      } catch (error) {
+        console.warn('⚠️ TensorFlow.js not available, using fallback methods');
+      }
+      
+      console.log('✅ All libraries loaded successfully');
+      return true;
+    } catch (error) {
+      console.error('❌ Critical library loading failed:', error);
+      throw error;
+    }
+  }
+};
+</script>
 
 <script>
 // Global error handler for 3D debugging
@@ -221,7 +298,7 @@ console.log('🌐 Browser Info:', {
 </script>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
   console.log('🚀 DOM Content Loaded - Product Showcase Block {{ block.id }}');
   console.log('📦 Block settings:', {
     enable_3d: {{ block.settings.enable_3d | default: false }},
@@ -236,9 +313,25 @@ document.addEventListener('DOMContentLoaded', function() {
     {% if block.settings.product != blank %}
       {% assign product = all_products[block.settings.product] %}
       {% if product.featured_image %}
-        console.log('✅ 3D enabled with product image, initializing 3D view...');
+        console.log('✅ 3D enabled with product image, loading libraries...');
         console.log('🖼️ Image URL:', '{{ product.featured_image | image_url: width: 600 }}');
-        initializeModel{{ block.id | replace: '-', '_' }}();
+        
+        try {
+          // Load required libraries first
+          await window.Q3DLibraryLoader.loadAll();
+          console.log('📚 Libraries loaded, initializing 3D view...');
+          initializeModel{{ block.id | replace: '-', '_' }}();
+        } catch (error) {
+          console.error('❌ Failed to load 3D libraries:', error);
+          console.log('🔄 Falling back to regular image display');
+          // Show regular image as fallback
+          const container = document.getElementById('model-container-{{ block.id }}');
+          const loading = document.getElementById('loading-{{ block.id }}');
+          if (container && loading) {
+            loading.style.display = 'none';
+            container.innerHTML = '<img src="{{ product.featured_image | image_url: width: 600 }}" alt="{{ product.featured_image.alt | default: product.title }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">';
+          }
+        }
       {% else %}
         console.log('❌ No product image available for 3D view');
       {% endif %}
@@ -393,14 +486,22 @@ function initializeModel{{ block.id | replace: '-', '_' }}() {
     async _initializeAIModels() {
       console.log('🧠 Initializing AI models for photorealistic 3D...');
       
-      // Check TensorFlow.js
+      // Check TensorFlow.js (optional)
       if (typeof tf === 'undefined') {
-        throw new Error('TensorFlow.js is required for AI-powered 3D');
+        console.warn('⚠️ TensorFlow.js not available, using fallback methods');
+        this.aiModels.tensorflow = false;
+        return; // Continue without AI models
       }
       
-      await tf.ready();
-      this.aiModels.tensorflow = true;
-      console.log('✅ TensorFlow.js ready:', tf.version);
+      try {
+        await tf.ready();
+        this.aiModels.tensorflow = true;
+        console.log('✅ TensorFlow.js ready:', tf.version);
+      } catch (error) {
+        console.warn('⚠️ TensorFlow.js initialization failed:', error.message);
+        this.aiModels.tensorflow = false;
+        return;
+      }
       
       try {
         // Initialize depth estimation model
@@ -1095,12 +1196,97 @@ function initializeModel{{ block.id | replace: '-', '_' }}() {
       
       try {
         const image = await this._loadImage();
-        const simpleDepth = await this._advancedProceduralDepth(image);
-        return this._createAIEnhancedMesh(this.imageUrl, simpleDepth);
+        const simpleDepth = await this._createSimpleDepthMap(image);
+        return this._createSimple3DMesh(this.imageUrl, simpleDepth);
       } catch (error) {
         console.error('❌ Fallback 3D generation failed:', error);
         return this._createSimplePlane();
       }
+    }
+    
+    async _createSimpleDepthMap(image) {
+      console.log('📐 Creating simple depth map...');
+      
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = 128;
+      canvas.height = 128;
+      ctx.drawImage(image, 0, 0, 128, 128);
+      
+      const imageData = ctx.getImageData(0, 0, 128, 128);
+      const { data } = imageData;
+      const depthData = new Float32Array(128 * 128);
+      
+      const centerX = 64;
+      const centerY = 64;
+      const maxDistance = Math.sqrt(centerX * centerX + centerY * centerY);
+      
+      for (let i = 0; i < 128 * 128; i++) {
+        const x = i % 128;
+        const y = Math.floor(i / 128);
+        const dataIdx = i * 4;
+        
+        const brightness = (data[dataIdx] + data[dataIdx + 1] + data[dataIdx + 2]) / 3;
+        const alpha = data[dataIdx + 3];
+        
+        if (alpha === 0) {
+          depthData[i] = 0;
+          continue;
+        }
+        
+        const distanceFromCenter = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2);
+        const normalizedDistance = distanceFromCenter / maxDistance;
+        
+        // Simple depth calculation
+        const depth = (brightness / 255) * (1 - normalizedDistance * 0.3);
+        depthData[i] = Math.max(0, Math.min(1, depth));
+      }
+      
+      return {
+        data: depthData,
+        width: 128,
+        height: 128
+      };
+    }
+    
+    async _createSimple3DMesh(textureUrl, depthMap) {
+      console.log('🎯 Creating simple 3D mesh...');
+      
+      // Create moderate resolution geometry
+      const geometry = new THREE.PlaneGeometry(2, 2, 63, 63);
+      
+      // Apply simple displacement
+      const vertices = geometry.attributes.position.array;
+      const depthData = depthMap.data;
+      
+      for (let i = 0; i < vertices.length; i += 3) {
+        const x = (vertices[i] + 1) * 0.5;
+        const y = (vertices[i + 1] + 1) * 0.5;
+        
+        const fx = x * (depthMap.width - 1);
+        const fy = y * (depthMap.height - 1);
+        const idx = Math.floor(fy) * depthMap.width + Math.floor(fx);
+        
+        const depth = depthData[idx] || 0.5;
+        const displacement = (depth - 0.5) * 0.2;
+        vertices[i + 2] = displacement;
+      }
+      
+      geometry.attributes.position.needsUpdate = true;
+      geometry.computeVertexNormals();
+      
+      // Create simple material
+      const material = new THREE.MeshPhongMaterial({
+        map: new THREE.TextureLoader().load(textureUrl),
+        transparent: true,
+        side: THREE.DoubleSide,
+        shininess: 30
+      });
+      
+      const mesh = new THREE.Mesh(geometry, material);
+      
+      console.log('✅ Simple 3D mesh created');
+      return mesh;
     }
     
     _createSimplePlane() {
