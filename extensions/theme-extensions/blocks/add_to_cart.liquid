@@ -27,8 +27,6 @@
     /* Base 3D Button */
     .atc-3d-btn {
       position: relative;
-      padding: 18px 36px;
-      font-size: 16px;
       font-weight: 700;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       text-decoration: none;
@@ -37,7 +35,6 @@
       overflow: visible;
       text-transform: uppercase;
       letter-spacing: 1px;
-      min-width: 220px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -47,6 +44,28 @@
       -webkit-tap-highlight-color: transparent;
       transform-style: preserve-3d;
       transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      color: {{ block.settings.button_text_color }};
+      
+      /* Full Width Logic */
+      {% if block.settings.full_width %}
+        width: 100%;
+        min-width: 100%;
+      {% else %}
+        min-width: 220px;
+      {% endif %}
+      
+      /* Height Logic */
+      {% case block.settings.button_height %}
+        {% when 'small' %}
+          padding: 12px 24px;
+          font-size: 14px;
+        {% when 'big' %}
+          padding: 24px 48px;
+          font-size: 18px;
+        {% else %}
+          padding: 18px 36px;
+          font-size: 16px;
+      {% endcase %}
     }
     
     .atc-3d-btn:disabled {
@@ -58,12 +77,10 @@
     /* 3D Button Style 1: Skewed Arrow */
     .btn-skewed {
       display: flex;
-      padding: 10px 45px;
       text-decoration: none;
       font-family: 'Poppins', sans-serif;
-      font-size: 18px;
       font-weight: 900;
-      color: white;
+      color: {{ block.settings.button_text_color }};
       background: {{ block.settings.button_color }};
       transition: 1s;
       box-shadow: 6px 6px 0 black;
@@ -72,6 +89,19 @@
       cursor: pointer;
       position: relative;
       overflow: visible;
+      
+      /* Height-specific adjustments for skewed button */
+      {% case block.settings.button_height %}
+        {% when 'small' %}
+          padding: 8px 35px;
+          font-size: 16px;
+        {% when 'big' %}
+          padding: 14px 55px;
+          font-size: 20px;
+        {% else %}
+          padding: 10px 45px;
+          font-size: 18px;
+      {% endcase %}
     }
 
     .btn-skewed:focus {
@@ -145,7 +175,7 @@
         {{ block.settings.button_color | color_lighten: 10 }}, 
         {{ block.settings.button_color }}, 
         {{ block.settings.button_color | color_darken: 15 }});
-      color: white;
+      color: {{ block.settings.button_text_color }};
       border-radius: 12px;
       position: relative;
       box-shadow: 
@@ -190,7 +220,7 @@
         {{ block.settings.button_color | color_lighten: 20 }}, 
         {{ block.settings.button_color }}, 
         {{ block.settings.button_color | color_darken: 20 }});
-      color: white;
+      color: {{ block.settings.button_text_color }};
       border-radius: 50px;
       position: relative;
       box-shadow: 
@@ -237,13 +267,13 @@
     
     /* 3D Button Style 4: Holographic Shimmer */
     .btn-holographic {
-      background: linear-gradient(45deg, 
-        {{ block.settings.button_color }}, 
-        {{ block.settings.button_color | color_lighten: 20 }}, 
-        {{ block.settings.button_color | color_darken: 10 }}, 
+      background: linear-gradient(45deg,
+        {{ block.settings.button_color }},
+        {{ block.settings.button_color | color_lighten: 20 }},
+        {{ block.settings.button_color | color_darken: 10 }},
         {{ block.settings.button_color | color_lighten: 15 }});
       background-size: 400% 400%;
-      color: white;
+      color: {{ block.settings.button_text_color }};
       border-radius: 16px;
       position: relative;
       overflow: hidden;
@@ -309,12 +339,10 @@
     /* 3D Button Style 5: Animated Border */
     .btn-animated-border {
       background: linear-gradient(-30deg, {{ block.settings.button_color | color_darken: 20 }} 50%, {{ block.settings.button_color | color_darken: 30 }} 50%);
-      padding: 20px 40px;
       display: inline-block;
       transform: translate(0%, 0%);
       overflow: hidden;
-      color: white;
-      font-size: 16px;
+      color: {{ block.settings.button_text_color }};
       font-weight: 700;
       letter-spacing: 2.5px;
       text-align: center;
@@ -324,6 +352,19 @@
       border: none;
       cursor: pointer;
       position: relative;
+      
+      /* Height-specific adjustments for animated border button */
+      {% case block.settings.button_height %}
+        {% when 'small' %}
+          padding: 16px 32px;
+          font-size: 14px;
+        {% when 'big' %}
+          padding: 24px 48px;
+          font-size: 18px;
+        {% else %}
+          padding: 20px 40px;
+          font-size: 16px;
+      {% endcase %}
     }
 
     .btn-animated-border::before {
@@ -922,6 +963,41 @@ document.addEventListener('DOMContentLoaded', function() {
       "id": "button_color",
       "label": "Button Color",
       "default": "#007aff"
+    },
+    {
+      "type": "color",
+      "id": "button_text_color",
+      "label": "Button Text Color",
+      "default": "#FFFFFF",
+      "info": "Color of the button text"
+    },
+    {
+      "type": "checkbox",
+      "id": "full_width",
+      "label": "Full Width Button",
+      "default": false,
+      "info": "Make button stretch to full container width"
+    },
+    {
+      "type": "select",
+      "id": "button_height",
+      "label": "Button Height",
+      "options": [
+        {
+          "value": "small",
+          "label": "Small"
+        },
+        {
+          "value": "regular",
+          "label": "Regular"
+        },
+        {
+          "value": "big",
+          "label": "Big"
+        }
+      ],
+      "default": "regular",
+      "info": "Choose button height size"
     }
   ]
 }
