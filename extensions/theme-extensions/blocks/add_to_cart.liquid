@@ -53,55 +53,64 @@
       transform: none !important;
     }
     
-    /* 3D Button Style 1: Extruded Cube */
-    .btn-cube {
+    /* 3D Button Style 1: Magnetic Hover */
+    .btn-magnetic {
       background: {{ block.settings.button_color }};
       color: white;
-      border-radius: 8px;
+      border-radius: 12px;
       position: relative;
+      overflow: hidden;
       transform: translateZ(0);
+      transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
     }
     
-    .btn-cube::before {
+    .btn-magnetic::before {
       content: '';
       position: absolute;
-      top: -6px;
-      left: 6px;
-      right: -6px;
-      bottom: 6px;
-      background: {{ block.settings.button_color | color_darken: 25 }};
-      border-radius: 8px;
-      z-index: -1;
-      transform: translateZ(-6px);
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, 
+        transparent, 
+        rgba(255, 255, 255, 0.4), 
+        transparent);
+      transition: left 0.5s ease;
+    }
+    
+    .btn-magnetic::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: radial-gradient(circle, 
+        rgba(255, 255, 255, 0.3), 
+        transparent 70%);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
       transition: all 0.3s ease;
     }
     
-    .btn-cube::after {
-      content: '';
-      position: absolute;
-      top: 6px;
-      left: -6px;
-      right: 6px;
-      bottom: -6px;
-      background: {{ block.settings.button_color | color_darken: 15 }};
-      border-radius: 8px;
-      z-index: -2;
-      transform: translateZ(-3px);
-      transition: all 0.3s ease;
+    .btn-magnetic:hover {
+      transform: translateY(-8px) scale(1.02);
+      box-shadow: 
+        0 20px 40px rgba(0, 0, 0, 0.2),
+        0 0 0 1px rgba(255, 255, 255, 0.1);
     }
     
-    .btn-cube:hover {
-      transform: translateZ(3px) translateY(-3px);
+    .btn-magnetic:hover::before {
+      left: 100%;
     }
     
-    .btn-cube:hover::before {
-      transform: translateZ(-9px);
-      top: -9px;
-      left: 9px;
+    .btn-magnetic:hover::after {
+      width: 100px;
+      height: 100px;
     }
     
-    .btn-cube:active {
-      transform: translateZ(0) translateY(0);
+    .btn-magnetic:active {
+      transform: translateY(-4px) scale(0.98);
     }
     
     /* 3D Button Style 2: Beveled Edge */
@@ -200,123 +209,148 @@
       transform: translateZ(2px) translateY(-2px) scale(0.98);
     }
     
-    /* 3D Button Style 4: Neon Tube */
-    .btn-neon {
-      background: transparent;
-      color: {{ block.settings.button_color }};
-      border: 3px solid {{ block.settings.button_color }};
-      border-radius: 25px;
+    /* 3D Button Style 4: Holographic Shimmer */
+    .btn-holographic {
+      background: linear-gradient(45deg, 
+        {{ block.settings.button_color }}, 
+        {{ block.settings.button_color | color_lighten: 20 }}, 
+        {{ block.settings.button_color | color_darken: 10 }}, 
+        {{ block.settings.button_color | color_lighten: 15 }});
+      background-size: 400% 400%;
+      color: white;
+      border-radius: 16px;
       position: relative;
-      text-shadow: 0 0 10px currentColor;
-      box-shadow: 
-        0 0 20px {{ block.settings.button_color }}40,
-        inset 0 0 20px {{ block.settings.button_color }}20;
+      overflow: hidden;
+      animation: holographicShift 4s ease-in-out infinite;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
     }
     
-    .btn-neon::before {
+    @keyframes holographicShift {
+      0%, 100% { background-position: 0% 50%; }
+      25% { background-position: 100% 50%; }
+      50% { background-position: 100% 100%; }
+      75% { background-position: 0% 100%; }
+    }
+    
+    .btn-holographic::before {
       content: '';
       position: absolute;
-      top: -6px;
-      left: -6px;
-      right: -6px;
-      bottom: -6px;
-      border: 2px solid {{ block.settings.button_color }};
-      border-radius: 31px;
-      opacity: 0.5;
-      box-shadow: 0 0 30px {{ block.settings.button_color }}60;
-      transition: all 0.3s ease;
+      top: -2px;
+      left: -2px;
+      right: -2px;
+      bottom: -2px;
+      background: linear-gradient(45deg, 
+        transparent, 
+        rgba(255, 255, 255, 0.1), 
+        transparent, 
+        rgba(255, 255, 255, 0.1), 
+        transparent);
+      background-size: 400% 400%;
+      border-radius: 18px;
+      z-index: -1;
+      animation: holographicBorder 3s ease-in-out infinite;
     }
     
-    .btn-neon::after {
+    @keyframes holographicBorder {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+    
+    .btn-holographic::after {
       content: '';
       position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: {{ block.settings.button_color }};
-      border-radius: 22px;
-      opacity: 0;
-      transition: all 0.3s ease;
+      top: 10%;
+      left: -100%;
+      width: 100%;
+      height: 80%;
+      background: linear-gradient(90deg, 
+        transparent, 
+        rgba(255, 255, 255, 0.6), 
+        transparent);
+      transform: skewX(-20deg);
+      transition: left 0.8s ease;
     }
     
-    .btn-neon:hover {
-      color: white;
-      text-shadow: none;
-      box-shadow: 
-        0 0 40px {{ block.settings.button_color }}80,
-        inset 0 0 30px {{ block.settings.button_color }}40;
+    .btn-holographic:hover {
+      transform: translateY(-4px) scale(1.05);
+      box-shadow: 0 12px 48px rgba(0, 0, 0, 0.4);
     }
     
-    .btn-neon:hover::before {
-      box-shadow: 0 0 50px {{ block.settings.button_color }}80;
-      opacity: 0.8;
+    .btn-holographic:hover::after {
+      left: 100%;
     }
     
-    .btn-neon:hover::after {
-      opacity: 1;
-    }
-    
-    /* 3D Button Style 5: Morphing Liquid */
-    .btn-liquid {
+    /* 3D Button Style 5: Particle Burst */
+    .btn-particle {
       background: {{ block.settings.button_color }};
       color: white;
-      border-radius: 20px;
+      border-radius: 14px;
       position: relative;
       overflow: hidden;
       transform: translateZ(0);
     }
     
-    .btn-liquid::before {
+    .btn-particle::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 4px;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      box-shadow: 
+        0 0 0 0 rgba(255, 255, 255, 0.8),
+        20px 10px 0 -2px rgba(255, 255, 255, 0.6),
+        -15px -20px 0 -1px rgba(255, 255, 255, 0.4),
+        25px -15px 0 -3px rgba(255, 255, 255, 0.5),
+        -20px 15px 0 -2px rgba(255, 255, 255, 0.7),
+        30px 5px 0 -4px rgba(255, 255, 255, 0.3);
+      opacity: 0;
+      transition: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+    
+    .btn-particle::after {
       content: '';
       position: absolute;
       top: 0;
       left: 0;
       right: 0;
       bottom: 0;
-      background: radial-gradient(circle at 30% 30%, 
-        {{ block.settings.button_color | color_lighten: 15 }}, 
-        transparent 50%);
-      border-radius: 20px;
+      background: radial-gradient(circle at center, 
+        transparent 30%, 
+        rgba(255, 255, 255, 0.1) 70%);
+      opacity: 0;
       transform: scale(0);
-      transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      transition: all 0.4s ease;
     }
     
-    .btn-liquid::after {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 0;
-      height: 0;
-      background: radial-gradient(circle, 
-        rgba(255,255,255,0.3), 
-        rgba(255,255,255,0.1), 
-        transparent);
-      border-radius: 50%;
-      transform: translate(-50%, -50%);
-      transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    .btn-particle:hover {
+      transform: translateY(-6px) scale(1.03);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
     }
     
-    .btn-liquid:hover {
-      border-radius: 30px;
-      transform: translateZ(3px) scale(1.05);
-      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    .btn-particle:hover::before {
+      opacity: 1;
+      box-shadow: 
+        0 0 0 0 rgba(255, 255, 255, 0.8),
+        40px 20px 0 -2px rgba(255, 255, 255, 0.6),
+        -30px -40px 0 -1px rgba(255, 255, 255, 0.4),
+        50px -30px 0 -3px rgba(255, 255, 255, 0.5),
+        -40px 30px 0 -2px rgba(255, 255, 255, 0.7),
+        60px 10px 0 -4px rgba(255, 255, 255, 0.3),
+        -25px -10px 0 -1px rgba(255, 255, 255, 0.6),
+        15px 35px 0 -2px rgba(255, 255, 255, 0.4);
     }
     
-    .btn-liquid:hover::before {
-      transform: scale(1.5);
-      border-radius: 30px;
+    .btn-particle:hover::after {
+      opacity: 1;
+      transform: scale(1);
     }
     
-    .btn-liquid:hover::after {
-      width: 200px;
-      height: 200px;
-    }
-    
-    .btn-liquid:active {
-      transform: translateZ(1px) scale(0.95);
-      border-radius: 15px;
+    .btn-particle:active {
+      transform: translateY(-3px) scale(0.98);
     }
     
     /* Loading, Success & Error States */
@@ -766,8 +800,8 @@ document.addEventListener('DOMContentLoaded', function() {
       "label": "3D Button Style",
       "options": [
         {
-          "value": "cube",
-          "label": "🎲 Extruded Cube"
+          "value": "magnetic",
+          "label": "🧲 Magnetic Hover"
         },
         {
           "value": "bevel",
@@ -778,15 +812,15 @@ document.addEventListener('DOMContentLoaded', function() {
           "label": "🔮 Floating Orb"
         },
         {
-          "value": "neon",
-          "label": "⚡ Neon Tube"
+          "value": "holographic",
+          "label": "🌈 Holographic Shimmer"
         },
         {
-          "value": "liquid",
-          "label": "💧 Morphing Liquid"
+          "value": "particle",
+          "label": "✨ Particle Burst"
         }
       ],
-      "default": "cube",
+      "default": "magnetic",
       "info": "Choose from 5 stunning 3D button designs"
     },
     {
