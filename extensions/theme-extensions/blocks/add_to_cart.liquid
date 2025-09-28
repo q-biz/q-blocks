@@ -6,6 +6,8 @@
 
 <div class="atc-3d-block" {{ block.shopify_attributes }}>
   <style>
+    @import url('https://fonts.googleapis.com/css?family=Poppins:900i');
+    
     .atc-3d-block {
       padding: 20px;
       margin: 16px 0;
@@ -53,70 +55,88 @@
       transform: none !important;
     }
     
-    /* 3D Button Style 1: Cyberpunk Matrix */
-    .btn-cyberpunk {
+    /* 3D Button Style 1: Skewed Arrow */
+    .btn-skewed {
+      display: flex;
+      padding: 10px 45px;
+      text-decoration: none;
+      font-family: 'Poppins', sans-serif;
+      font-size: 18px;
+      font-weight: 900;
+      color: white;
       background: {{ block.settings.button_color }};
-      color: #00ff00;
+      transition: 1s;
+      box-shadow: 6px 6px 0 black;
+      transform: skewX(-15deg);
       border: none;
+      cursor: pointer;
       position: relative;
-      overflow: hidden;
-      transform: translateZ(0);
-      transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-      clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
+      overflow: visible;
     }
-    
-    .btn-cyberpunk::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: 
-        linear-gradient(90deg, transparent 0%, #00ff0020 50%, transparent 100%),
-        repeating-linear-gradient(
-          90deg,
-          transparent,
-          transparent 2px,
-          #00ff0010 2px,
-          #00ff0010 4px
-        );
-      animation: matrixScan 2s linear infinite;
+
+    .btn-skewed:focus {
+      outline: none; 
     }
-    
-    @keyframes matrixScan {
-      0% { transform: translateX(-100%); }
-      100% { transform: translateX(100%); }
+
+    .btn-skewed:hover {
+      transition: 0.5s;
+      box-shadow: 10px 10px 0 #FBC638;
     }
-    
-    .btn-cyberpunk::after {
-      content: '';
-      position: absolute;
-      top: -2px;
-      left: -2px;
-      right: -2px;
-      bottom: -2px;
-      background: linear-gradient(45deg, #00ff00, transparent, #00ff00);
-      z-index: -1;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-      clip-path: polygon(12px 0%, 100% 0%, calc(100% - 12px) 100%, 0% 100%);
+
+    .btn-skewed .btn-text {
+      transform: skewX(15deg);
     }
-    
-    .btn-cyberpunk:hover {
-      transform: translateY(-4px);
-      box-shadow: 
-        0 0 20px #00ff0050,
-        0 8px 32px rgba(0, 0, 0, 0.3);
-      text-shadow: 0 0 10px #00ff00;
+
+    .btn-skewed .btn-arrow {
+      width: 20px;
+      margin-left: 30px;
+      position: relative;
+      top: 12%;
+      transform: skewX(15deg);
+      transition: 0.5s;
+      margin-right: 0px;
     }
-    
-    .btn-cyberpunk:hover::after {
-      opacity: 1;
+
+    .btn-skewed:hover .btn-arrow {
+      transition: 0.5s;
+      margin-right: 45px;
     }
-    
-    .btn-cyberpunk:active {
-      transform: translateY(-2px);
+
+    /* SVG Arrow Animations */
+    .btn-skewed path.arrow-one {
+      transition: 0.4s;
+      transform: translateX(-60%);
+      fill: white;
+    }
+
+    .btn-skewed path.arrow-two {
+      transition: 0.5s;
+      transform: translateX(-30%);
+      fill: white;
+    }
+
+    .btn-skewed path.arrow-three {
+      fill: white;
+    }
+
+    .btn-skewed:hover path.arrow-three {
+      animation: arrowColorAnim 1s infinite 0.2s;
+    }
+
+    .btn-skewed:hover path.arrow-one {
+      transform: translateX(0%);
+      animation: arrowColorAnim 1s infinite 0.6s;
+    }
+
+    .btn-skewed:hover path.arrow-two {
+      transform: translateX(0%);
+      animation: arrowColorAnim 1s infinite 0.4s;
+    }
+
+    @keyframes arrowColorAnim {
+      0% { fill: white; }
+      50% { fill: #FBC638; }
+      100% { fill: white; }
     }
     
     /* 3D Button Style 2: Beveled Edge */
@@ -286,62 +306,100 @@
       left: 100%;
     }
     
-    /* 3D Button Style 5: Origami Fold */
-    .btn-origami {
-      background: {{ block.settings.button_color }};
-      color: white;
-      border: none;
-      position: relative;
+    /* 3D Button Style 5: Animated Border */
+    .btn-animated-border {
+      background: linear-gradient(-30deg, {{ block.settings.button_color | color_darken: 20 }} 50%, {{ block.settings.button_color | color_darken: 30 }} 50%);
+      padding: 20px 40px;
+      display: inline-block;
+      transform: translate(0%, 0%);
       overflow: hidden;
-      transform: translateZ(0);
-      clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px));
+      color: white;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 2.5px;
+      text-align: center;
+      text-transform: uppercase;
+      text-decoration: none;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+      border: none;
+      cursor: pointer;
+      position: relative;
     }
-    
-    .btn-origami::before {
+
+    .btn-animated-border::before {
       content: '';
       position: absolute;
-      top: 0;
-      right: 0;
-      width: 20px;
-      height: 20px;
-      background: {{ block.settings.button_color | color_darken: 30 }};
-      clip-path: polygon(0 0, 100% 0, 0 100%);
-      transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      top: 0px;
+      left: 0px;
+      width: 100%;
+      height: 100%;
+      background-color: {{ block.settings.button_color | color_lighten: 20 }};
+      opacity: 0;
+      transition: .2s opacity ease-in-out;
     }
-    
-    .btn-origami::after {
-      content: '';
+
+    .btn-animated-border:hover::before {
+      opacity: 0.2;
+    }
+
+    .btn-animated-border .border-span {
       position: absolute;
-      bottom: 0;
-      left: 0;
-      width: 20px;
-      height: 20px;
-      background: {{ block.settings.button_color | color_darken: 15 }};
-      clip-path: polygon(0 100%, 100% 100%, 100% 0);
-      transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     }
-    
-    .btn-origami:hover {
-      transform: translateY(-6px) rotateX(5deg) rotateY(-2deg);
-      box-shadow: 
-        0 20px 40px rgba(0, 0, 0, 0.3),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+
+    .btn-animated-border .border-span:nth-child(1) {
+      top: 0px;
+      left: 0px;
+      width: 100%;
+      height: 2px;
+      background: linear-gradient(to left, rgba(0, 0, 0, 0), {{ block.settings.button_color | color_lighten: 40 }});
+      animation: 2s animateTop linear infinite;
     }
-    
-    .btn-origami:hover::before {
-      width: 30px;
-      height: 30px;
-      background: {{ block.settings.button_color | color_darken: 40 }};
+
+    .btn-animated-border .border-span:nth-child(2) {
+      top: 0px;
+      right: 0px;
+      height: 100%;
+      width: 2px;
+      background: linear-gradient(to top, rgba(0, 0, 0, 0), {{ block.settings.button_color | color_lighten: 40 }});
+      animation: 2s animateRight linear -1s infinite;
     }
-    
-    .btn-origami:hover::after {
-      width: 30px;
-      height: 30px;
-      background: {{ block.settings.button_color | color_darken: 25 }};
+
+    .btn-animated-border .border-span:nth-child(3) {
+      bottom: 0px;
+      left: 0px;
+      width: 100%;
+      height: 2px;
+      background: linear-gradient(to right, rgba(0, 0, 0, 0), {{ block.settings.button_color | color_lighten: 40 }});
+      animation: 2s animateBottom linear infinite;
     }
-    
-    .btn-origami:active {
-      transform: translateY(-3px) rotateX(2deg) rotateY(-1deg);
+
+    .btn-animated-border .border-span:nth-child(4) {
+      top: 0px;
+      left: 0px;
+      height: 100%;
+      width: 2px;
+      background: linear-gradient(to bottom, rgba(0, 0, 0, 0), {{ block.settings.button_color | color_lighten: 40 }});
+      animation: 2s animateLeft linear -1s infinite;
+    }
+
+    @keyframes animateTop {
+      0% { transform: translateX(100%); }
+      100% { transform: translateX(-100%); }
+    }
+
+    @keyframes animateRight {
+      0% { transform: translateY(100%); }
+      100% { transform: translateY(-100%); }
+    }
+
+    @keyframes animateBottom {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+
+    @keyframes animateLeft {
+      0% { transform: translateY(-100%); }
+      100% { transform: translateY(100%); }
     }
     
     /* Loading, Success & Error States */
@@ -619,20 +677,59 @@
         <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}" class="variant-id">
         
         <div class="atc-container">
-          <button type="submit" class="atc-3d-btn btn-{{ block.settings.button_style }}" id="atc-{{ block.id }}" aria-label="Add {{ product.title }} to cart">
-            <svg class="cart-icon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-              <path d="M7 18c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12L8.1 13h7.45c.75 0 1.41-.41 1.75-1.03L21.7 4H5.21l-.94-2H1zm16 16c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
-            </svg>
-            <span class="btn-text">{{ block.settings.button_text }}</span>
-            <div class="loading-spinner">
-              <div class="spinner"></div>
-            </div>
-            <div class="success-icon">
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+          {% if block.settings.button_style == 'skewed' %}
+            <button type="submit" class="atc-3d-btn btn-{{ block.settings.button_style }}" id="atc-{{ block.id }}" aria-label="Add {{ product.title }} to cart">
+              <span class="btn-text">{{ block.settings.button_text }}</span>
+              <span class="btn-arrow">
+                <svg width="66px" height="43px" viewBox="0 0 66 43" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                  <g id="arrow" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                    <path class="arrow-one" d="M40.1543933,3.89485454 L43.9763149,0.139296592 C44.1708311,-0.0518420739 44.4826329,-0.0518571125 44.6771675,0.139262789 L65.6916134,20.7848311 C66.0855801,21.1718824 66.0911863,21.8050225 65.704135,22.1989893 C65.7000188,22.2031791 65.6958657,22.2073326 65.6916762,22.2114492 L44.677098,42.8607841 C44.4825957,43.0519059 44.1708242,43.0519358 43.9762853,42.8608513 L40.1545186,39.1069479 C39.9575152,38.9134427 39.9546793,38.5968729 40.1481845,38.3998695 C40.1502893,38.3977268 40.1524132,38.395603 40.1545562,38.3934985 L56.9937789,21.8567812 C57.1908028,21.6632968 57.193672,21.3467273 57.0001876,21.1497035 C56.9980647,21.1475418 56.9959223,21.1453995 56.9937605,21.1432767 L40.1545208,4.60825197 C39.9574869,4.41477773 39.9546013,4.09820839 40.1480756,3.90117456 C40.1501626,3.89904911 40.1522686,3.89694235 40.1543933,3.89485454 Z" fill="#FFFFFF"></path>
+                    <path class="arrow-two" d="M20.1543933,3.89485454 L23.9763149,0.139296592 C24.1708311,-0.0518420739 24.4826329,-0.0518571125 24.6771675,0.139262789 L45.6916134,20.7848311 C46.0855801,21.1718824 46.0911863,21.8050225 45.704135,22.1989893 C45.7000188,22.2031791 45.6958657,22.2073326 45.6916762,22.2114492 L24.677098,42.8607841 C24.4825957,43.0519059 24.1708242,43.0519358 23.9762853,42.8608513 L20.1545186,39.1069479 C19.9575152,38.9134427 19.9546793,38.5968729 20.1481845,38.3998695 C20.1502893,38.3977268 20.1524132,38.395603 20.1545562,38.3934985 L36.9937789,21.8567812 C37.1908028,21.6632968 37.193672,21.3467273 37.0001876,21.1497035 C36.9980647,21.1475418 36.9959223,21.1453995 36.9937605,21.1432767 L20.1545208,4.60825197 C19.9574869,4.41477773 19.9546013,4.09820839 20.1480756,3.90117456 C20.1501626,3.89904911 20.1522686,3.89694235 20.1543933,3.89485454 Z" fill="#FFFFFF"></path>
+                    <path class="arrow-three" d="M0.154393339,3.89485454 L3.97631488,0.139296592 C4.17083111,-0.0518420739 4.48263286,-0.0518571125 4.67716753,0.139262789 L25.6916134,20.7848311 C26.0855801,21.1718824 26.0911863,21.8050225 25.704135,22.1989893 C25.7000188,22.2031791 25.6958657,22.2073326 25.6916762,22.2114492 L4.67709797,42.8607841 C4.48259567,43.0519059 4.17082418,43.0519358 3.97628526,42.8608513 L0.154518591,39.1069479 C-0.0424848215,38.9134427 -0.0453206733,38.5968729 0.148184538,38.3998695 C0.150289256,38.3977268 0.152413239,38.395603 0.154556228,38.3934985 L16.9937789,21.8567812 C17.1908028,21.6632968 17.193672,21.3467273 17.0001876,21.1497035 C16.9980647,21.1475418 16.9959223,21.1453995 16.9937605,21.1432767 L0.15452076,4.60825197 C-0.0425130651,4.41477773 -0.0453986756,4.09820839 0.148075568,3.90117456 C0.150162624,3.89904911 0.152268631,3.89694235 0.154393339,3.89485454 Z" fill="#FFFFFF"></path>
+                  </g>
+                </svg>
+              </span>
+              <div class="loading-spinner">
+                <div class="spinner"></div>
+              </div>
+              <div class="success-icon">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                  <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                </svg>
+              </div>
+            </button>
+          {% elsif block.settings.button_style == 'animated-border' %}
+            <button type="submit" class="atc-3d-btn btn-{{ block.settings.button_style }}" id="atc-{{ block.id }}" aria-label="Add {{ product.title }} to cart">
+              <span class="border-span"></span>
+              <span class="border-span"></span>
+              <span class="border-span"></span>
+              <span class="border-span"></span>
+              <span class="btn-text">{{ block.settings.button_text }}</span>
+              <div class="loading-spinner">
+                <div class="spinner"></div>
+              </div>
+              <div class="success-icon">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                  <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                </svg>
+              </div>
+            </button>
+          {% else %}
+            <button type="submit" class="atc-3d-btn btn-{{ block.settings.button_style }}" id="atc-{{ block.id }}" aria-label="Add {{ product.title }} to cart">
+              <svg class="cart-icon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                <path d="M7 18c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12L8.1 13h7.45c.75 0 1.41-.41 1.75-1.03L21.7 4H5.21l-.94-2H1zm16 16c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
               </svg>
-            </div>
-          </button>
+              <span class="btn-text">{{ block.settings.button_text }}</span>
+              <div class="loading-spinner">
+                <div class="spinner"></div>
+              </div>
+              <div class="success-icon">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                  <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                </svg>
+              </div>
+            </button>
+          {% endif %}
         </div>
       </form>
     {% else %}
@@ -791,8 +888,8 @@ document.addEventListener('DOMContentLoaded', function() {
       "label": "3D Button Style",
       "options": [
         {
-          "value": "cyberpunk",
-          "label": "🤖 Cyberpunk Matrix"
+          "value": "skewed",
+          "label": "⚡ Skewed Arrow"
         },
         {
           "value": "bevel",
@@ -807,11 +904,11 @@ document.addEventListener('DOMContentLoaded', function() {
           "label": "🌈 Holographic Shimmer"
         },
         {
-          "value": "origami",
-          "label": "📐 Origami Fold"
+          "value": "animated-border",
+          "label": "🔥 Animated Border"
         }
       ],
-      "default": "cyberpunk",
+      "default": "skewed",
       "info": "Choose from 5 stunning 3D button designs"
     },
     {
